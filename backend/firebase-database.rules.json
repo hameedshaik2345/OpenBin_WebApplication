@@ -1,0 +1,20 @@
+{
+  "rules": {
+    "rvm_status": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "processing_status": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "system_status": {
+      ".read": "auth != null",
+      ".write": false
+    },
+    "rvm_display": {
+      ".read": "auth != null",
+      ".write": false
+    }
+  }
+}

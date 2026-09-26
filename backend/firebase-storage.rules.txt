@@ -1,0 +1,13 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /rvm-content/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    match /rvm-evidence/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}
