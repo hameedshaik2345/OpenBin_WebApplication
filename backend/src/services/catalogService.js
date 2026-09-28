@@ -28,59 +28,71 @@ async function listCompanies() {
 async function createCompany(data) {
   const result = await pool.query(
     `INSERT INTO companies (company_name, registration_number, email, phone, address, status)
-     VALUES ($1,$2,$3,$4,$5,COALESCE($6,'ACTIVE')) RETURNING *`,
+     VALUES ($1,$2,$3,$4,$5,COALESCE($6::entity_status, 'ACTIVE'::entity_status)) RETURNING *`,
     [
       data.company_name,
       data.registration_number || null,
       data.email || null,
       data.phone || null,
       data.address || null,
-      data.status,
+      data.status || null,
     ]
   );
   return result.rows[0];
 }
 
-async function listBrands() {
-  const result = await pool.query(
-    `SELECT b.*, c.company_name
-     FROM brands b
-     JOIN companies c ON c.company_id = b.company_id
-     ORDER BY b.brand_name`
-  );
+async function listBrands(companyId = null) {
+  let query = `
+    SELECT b.*, c.company_name
+    FROM brands b
+    JOIN companies c ON c.company_id = b.company_id
+  `;
+  const params = [];
+  if (companyId) {
+    params.push(companyId);
+    query += ` WHERE b.company_id = $1`;
+  }
+  query += ` ORDER BY b.brand_name`;
+  const result = await pool.query(query, params);
   return result.rows;
 }
 
 async function createBrand(data) {
   const result = await pool.query(
     `INSERT INTO brands (company_id, brand_name, status)
-     VALUES ($1,$2,COALESCE($3,'ACTIVE')) RETURNING *`,
-    [data.company_id, data.brand_name, data.status]
+     VALUES ($1,$2,COALESCE($3::entity_status, 'ACTIVE'::entity_status)) RETURNING *`,
+    [data.company_id, data.brand_name, data.status || null]
   );
   return result.rows[0];
 }
 
-async function listProducts() {
-  const result = await pool.query(
-    `SELECT p.*, b.brand_name, m.material_code, m.material_name
-     FROM products p
-     JOIN brands b ON b.brand_id = p.brand_id
-     JOIN materials m ON m.material_id = p.material_id
-     ORDER BY p.product_name`
-  );
+async function listProducts(companyId = null) {
+  let query = `
+    SELECT p.*, b.brand_name, m.material_code, m.material_name
+    FROM products p
+    JOIN brands b ON b.brand_id = p.brand_id
+    JOIN materials m ON m.material_id = p.material_id
+  `;
+  const params = [];
+  if (companyId) {
+    params.push(companyId);
+    query += ` WHERE b.company_id = $1`;
+  }
+  query += ` ORDER BY p.product_name`;
+  const result = await pool.query(query, params);
   return result.rows;
 }
 
 async function createProduct(data) {
   const result = await pool.query(
     `INSERT INTO products (brand_id, material_id, product_name, volume_ml, status)
-     VALUES ($1,$2,$3,$4,COALESCE($5,'ACTIVE')) RETURNING *`,
+     VALUES ($1,$2,$3,$4,COALESCE($5::entity_status, 'ACTIVE'::entity_status)) RETURNING *`,
     [
       data.brand_id,
       data.material_id,
       data.product_name,
       data.volume_ml ?? null,
-      data.status,
+      data.status || null,
     ]
   );
   return result.rows[0];

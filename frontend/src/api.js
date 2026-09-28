@@ -34,8 +34,8 @@ export const api = {
   users: (token, q) => apiFetch(`/api/auth/users${q ? `?q=${encodeURIComponent(q)}` : ""}`, { token }),
   updateUserStatus: (token, userId, status) =>
     apiFetch(`/api/auth/users/${userId}/status`, { token, method: "PATCH", body: { status } }),
-  updateUserRole: (token, userId, role) =>
-    apiFetch(`/api/auth/users/${userId}/role`, { token, method: "PATCH", body: { role } }),
+  updateUserRole: (token, userId, role, company_id) =>
+    apiFetch(`/api/auth/users/${userId}/role`, { token, method: "PATCH", body: { role, company_id } }),
 
   rvms: (token) => apiFetch("/api/rvms", { token }),
   rvm: (token, id) => apiFetch(`/api/rvms/${id}`, { token }),
@@ -93,9 +93,31 @@ export const api = {
   createReconciliation: (token, body) =>
     apiFetch("/api/catalog/reconciliations", { token, method: "POST", body }),
   eprReports: (token) => apiFetch("/api/catalog/epr-reports", { token }),
+  eprReport: (token, id) => apiFetch(`/api/catalog/epr-reports/${id}`, { token }),
   createEprReport: (token, body) => apiFetch("/api/catalog/epr-reports", { token, method: "POST", body }),
+  exportEprReportCsv: async (token, id, filename = "epr-report.csv") => {
+    const res = await fetch(`${API_URL}/api/catalog/epr-reports/${id}/export`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Failed to export report CSV");
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  },
   audit: (token) => apiFetch("/api/catalog/audit", { token }),
 
   uploadRvmMedia: (token, rvmId, formData) =>
     apiFetch(`/api/rvms/${rvmId}/media`, { token, method: "POST", formData }),
+
+  notifications: (token) => apiFetch("/api/notifications", { token }),
+  markNotificationRead: (token, id) =>
+    apiFetch(`/api/notifications/${id}/read`, { token, method: "PATCH" }),
+  markAllNotificationsRead: (token) =>
+    apiFetch("/api/notifications/read-all", { token, method: "POST" }),
 };

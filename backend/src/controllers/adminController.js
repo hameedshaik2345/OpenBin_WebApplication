@@ -21,7 +21,11 @@ async function createMaterial(req, res) {
 
 async function companies(req, res) {
   try {
-    return res.json({ companies: await catalogService.listCompanies() });
+    const all = await catalogService.listCompanies();
+    if (req.dbUser.role === "EPR" && req.dbUser.company_id) {
+      return res.json({ companies: all.filter((c) => c.company_id === req.dbUser.company_id) });
+    }
+    return res.json({ companies: all });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -37,7 +41,8 @@ async function createCompany(req, res) {
 
 async function brands(req, res) {
   try {
-    return res.json({ brands: await catalogService.listBrands() });
+    const companyId = req.dbUser.role === "EPR" ? req.dbUser.company_id : (req.query.company_id || null);
+    return res.json({ brands: await catalogService.listBrands(companyId) });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -53,7 +58,8 @@ async function createBrand(req, res) {
 
 async function products(req, res) {
   try {
-    return res.json({ products: await catalogService.listProducts() });
+    const companyId = req.dbUser.role === "EPR" ? req.dbUser.company_id : (req.query.company_id || null);
+    return res.json({ products: await catalogService.listProducts(companyId) });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -164,7 +170,38 @@ async function createReconciliation(req, res) {
 
 async function eprReports(req, res) {
   try {
-    return res.json({ reports: await collectionService.listEprReports() });
+    const companyId = req.dbUser.role === "EPR" ? req.dbUser.company_id : (req.query.company_id || null);
+    return res.json({ reports: await collectionService.listEprReports(companyId) });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+async function getEprReport(req, res) {
+  try {
+    const report = await collectionService.getEprReport(req.params.reportId);
+    if (!report) return res.status(404).json({ error: "Report not found" });
+    if (req.dbUser.role === "EPR" && req.dbUser.company_id && req.dbUser.company_id !== report.company_id) {
+      return res.status(403).json({ error: "Forbidden: Not your company" });
+    }
+    return res.json({ report });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+async function exportEprReport(req, res) {
+  try {
+    const report = await collectionService.getEprReport(req.params.reportId);
+    if (!report) return res.status(404).json({ error: "Report not found" });
+    if (req.dbUser.role === "EPR" && req.dbUser.company_id && req.dbUser.company_id !== report.company_id) {
+      return res.status(403).json({ error: "Forbidden: Not your company" });
+    }
+    const csv = await collectionService.exportEprReportCsv(req.params.reportId);
+    const cleanCompany = (report.company_name || "report").replace(/[^a-zA-Z0-9_-]/g, "_");
+    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Disposition", `attachment; filename="EPR_${cleanCompany}_${report.period_start}_to_${report.period_end}.csv"`);
+    return res.send(csv);
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -172,9 +209,10 @@ async function eprReports(req, res) {
 
 async function createEprReport(req, res) {
   try {
+    const companyId = req.dbUser.role === "EPR" && req.dbUser.company_id ? req.dbUser.company_id : req.body.company_id;
     return res
       .status(201)
-      .json({ report: await collectionService.createEprReport(req.body, req.dbUser) });
+      .json({ report: await collectionService.createEprReport({ ...req.body, company_id: companyId }, req.dbUser) });
   } catch (err) {
     return res.status(500).json({ error: err.message });
   }
@@ -244,6 +282,8 @@ module.exports = {
   reconciliations,
   createReconciliation,
   eprReports,
+  getEprReport,
+  exportEprReport,
   createEprReport,
   audit,
   uploadMedia,

@@ -93,6 +93,17 @@ async function withdraw({ amount, method, destinationReference }, dbUser) {
       client,
     });
 
+    const { createNotification } = require("./notificationService");
+    await createNotification(
+      {
+        userId: dbUser.user_id,
+        title: "💸 Withdrawal Processed",
+        message: `Processed withdrawal of ₹${Number(amount).toFixed(2)} via ${method || "UPI"}.`,
+        type: "WITHDRAWAL",
+      },
+      client
+    );
+
     await client.query("COMMIT");
     return {
       withdrawal: withdrawal.rows[0],
@@ -174,6 +185,17 @@ async function donate({ amount }, dbUser) {
       afterData: { amount },
       client,
     });
+
+    const { createNotification } = require("./notificationService");
+    await createNotification(
+      {
+        userId: dbUser.user_id,
+        title: "❤️ Donation Received",
+        message: `Thank you! Donated ₹${Number(amount).toFixed(2)} to charity.`,
+        type: "DONATION",
+      },
+      client
+    );
 
     await client.query("COMMIT");
     return {

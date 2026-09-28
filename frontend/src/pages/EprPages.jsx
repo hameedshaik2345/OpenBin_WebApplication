@@ -187,42 +187,250 @@ export function EprMedia() {
 }
 
 export function EprReports() {
-  const { token } = useAuth();
+  const { token, profile } = useAuth();
   const [reports, setReports] = useState([]);
-  const [batches, setBatches] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+
+  const [form, setForm] = useState({
+    company_id: "",
+    period_start: "2026-01-01",
+    period_end: "2026-12-31",
+    status: "DRAFT",
+  });
+
+  async function load() {
+    try {
+      const [r, c] = await Promise.all([
+        api.eprReports(token),
+        api.companies(token).catch(() => ({ companies: [] })),
+      ]);
+      setReports(r.reports || []);
+      setCompanies(c.companies || []);
+      if (!form.company_id && c.companies?.length) {
+        setForm((prev) => ({ ...prev, company_id: c.companies[0].company_id }));
+      }
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
 
   useEffect(() => {
-    if (!token) return;
-    Promise.all([api.eprReports(token), api.collections(token)]).then(([r, b]) => {
-      setReports(r.reports);
-      setBatches(b.batches);
-    });
+    if (token) load();
   }, [token]);
 
+  async function handleGenerate(e) {
+    e.preventDefault();
+    setMsg("");
+    setErr("");
+    setLoading(true);
+    try {
+      const result = await api.createEprReport(token, form);
+      setMsg(`EPR Compliance Report generated successfully (${result.report.total_recorded_weight_kg} kg recorded across ${result.report.total_transactions} deposits)`);
+      await load();
+      viewDetails(result.report.report_id);
+    } catch (e) {
+      setErr(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function viewDetails(reportId) {
+    try {
+      const data = await api.eprReport(token, reportId);
+      setSelectedReport(data.report);
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
   return (
-    <AppShell title="EPR / collection visibility" nav={nav}>
-      <div className="panel">
-        <h2>Collection batches</h2>
-        <ul>
-          {batches.map((b) => (
-            <li key={b.collection_batch_id}>
-              {b.batch_code} · {b.material_code} · {b.recorded_weight_kg} kg · {b.status}
-            </li>
-          ))}
-          {!batches.length && <li className="muted">No batches yet</li>}
-        </ul>
+    <AppShell title="EPR Compliance & Reporting" nav={nav}>
+      <form className="panel stack-form" onSubmit={handleGenerate}>
+        <h2>Generate EPR Compliance Report</h2>
+        <p className="muted">
+          Generates an official Extended Producer Responsibility compliance report. Automatically aggregates all RVM deposit transactions and verified recycler receipts for the selected period.
+        </p>
+
+        <div className="grid-2">
+          <label>
+            Company
+            <select
+              value={form.company_id}
+              onChange={(e) => setForm({ ...form, company_id: e.target.value })}
+              required
+            >
+              {companies.map((c) => (
+                <option key={c.company_id} value={c.company_id}>
+                  {c.company_name} ({c.registration_number || "CIN"})
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label>
+            Report Status
+            <select
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
+              <option value="DRAFT">DRAFT</option>
+              <option value="SUBMITTED">SUBMITTED</option>
+              <option value="VERIFIED">VERIFIED</option>
+            </select>
+          </label>
+
+          <label>
+            Period Start
+            <input
+              type="date"
+              value={form.period_start}
+              onChange={(e) => setForm({ ...form, period_start: e.target.value })}
+              required
+            />
+          </label>
+
+          <label>
+            Period End
+            <input
+              type="date"
+              value={form.period_end}
+              onChange={(e) => setForm({ ...form, period_end: e.target.value })}
+              required
+            />
+          </label>
+        </div>
+
+        <button className="btn" type="submit" disabled={loading || !form.company_id}>
+          {loading ? "Calculating & Generating…" : "⚡ Generate Compliance Report"}
+        </button>
+
+        {msg && <p className="success">{msg}</p>}
+        {err && <p className="error">{err}</p>}
+      </form>
+
+      <div className="panel table-wrap">
+        <h2>Generated Reports</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Period</th>
+              <th>Transactions</th>
+              <th>Recorded (kg)</th>
+              <th>Verified (kg)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reports.map((r) => (
+              <tr key={r.report_id}>
+                <td><strong>{r.company_name}</strong></td>
+                <td>{r.period_start} → {r.period_end}</td>
+                <td>{r.total_transactions}</td>
+                <td>{Number(r.total_recorded_weight_kg).toFixed(3)} kg</td>
+                <td>{Number(r.total_verified_weight_kg).toFixed(3)} kg</td>
+                <td>
+                  <span className={`badge ${r.status.toLowerCase()}`}>{r.status}</span>
+                </td>
+                <td style={{ display: "flex", gap: "0.5rem" }}>
+                  <button
+                    className="btn small secondary"
+                    type="button"
+                    onClick={() => viewDetails(r.report_id)}
+                  >
+                    Breakdown
+                  </button>
+                  <button
+                    className="btn small"
+                    type="button"
+                    onClick={() =>
+                      api.exportEprReportCsv(
+                        token,
+                        r.report_id,
+                        `EPR_${r.company_name.replace(/\s+/g, "_")}_${r.period_start}.csv`
+                      )
+                    }
+                  >
+                    📥 CSV
+                  </button>
+                </td>
+              </tr>
+            ))}
+            {!reports.length && (
+              <tr>
+                <td colSpan="7" className="muted text-center">
+                  No EPR reports found. Generate one above!
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
-      <div className="panel">
-        <h2>EPR reports</h2>
-        <ul>
-          {reports.map((r) => (
-            <li key={r.report_id}>
-              {r.company_name} · {r.period_start} → {r.period_end} · {r.status}
-            </li>
-          ))}
-          {!reports.length && <li className="muted">No reports yet</li>}
-        </ul>
-      </div>
+
+      {selectedReport && (
+        <div className="panel modal-like" style={{ marginTop: "1.5rem", border: "1px solid var(--accent)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h2>Compliance Report Breakdown: {selectedReport.company_name}</h2>
+            <button className="btn ghost" type="button" onClick={() => setSelectedReport(null)}>✕ Close</button>
+          </div>
+          <p className="muted">
+            Period: {selectedReport.period_start} to {selectedReport.period_end} · Generated by {selectedReport.generated_by_name}
+          </p>
+
+          <h3>Material Breakdown</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Material</th>
+                <th>Transactions</th>
+                <th>Total Weight (kg)</th>
+                <th>Total Rewards Disbursed</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedReport.breakdown?.map((b) => (
+                <tr key={b.material_code}>
+                  <td><strong>{b.material_code}</strong></td>
+                  <td>{b.material_name}</td>
+                  <td>{b.count}</td>
+                  <td>{Number(b.weight_kg).toFixed(3)} kg</td>
+                  <td>₹{Number(b.total_reward).toFixed(2)}</td>
+                </tr>
+              ))}
+              {!selectedReport.breakdown?.length && (
+                <tr>
+                  <td colSpan="5" className="muted">
+                    No transactions recorded for this company during this period.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+          <div style={{ marginTop: "1rem" }}>
+            <button
+              className="btn"
+              type="button"
+              onClick={() =>
+                api.exportEprReportCsv(
+                  token,
+                  selectedReport.report_id,
+                  `EPR_${selectedReport.company_name.replace(/\s+/g, "_")}_${selectedReport.period_start}.csv`
+                )
+              }
+            >
+              📥 Download Full CSV Report
+            </button>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }

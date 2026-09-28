@@ -12,7 +12,8 @@ const nav = [
   { to: "/admin/pricing", label: "Pricing" },
   { to: "/admin/transactions", label: "Transactions" },
   { to: "/admin/accounts", label: "Accounts" },
-  { to: "/admin/collection", label: "Collection / EPR" },
+  { to: "/admin/collection", label: "Collection & Batches" },
+  { to: "/epr/reports", label: "EPR Compliance" },
   { to: "/admin/audit", label: "Audit" },
   { to: "/rvm-simulator", label: "RVM Simulator" },
 ];
@@ -59,12 +60,17 @@ export function AdminHome() {
 export function AdminUsers() {
   const { token } = useAuth();
   const [users, setUsers] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [q, setQ] = useState("");
   const [err, setErr] = useState("");
 
   async function load() {
-    const data = await api.users(token, q);
-    setUsers(data.users);
+    const [uData, cData] = await Promise.all([
+      api.users(token, q),
+      api.companies(token).catch(() => ({ companies: [] })),
+    ]);
+    setUsers(uData.users || []);
+    setCompanies(cData.companies || []);
   }
 
   useEffect(() => {
@@ -88,7 +94,7 @@ export function AdminUsers() {
         <table>
           <thead>
             <tr>
-              <th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th>
+              <th>Name</th><th>Email</th><th>Role</th><th>Company (EPR)</th><th>Status</th><th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -100,7 +106,8 @@ export function AdminUsers() {
                   <select
                     value={u.role}
                     onChange={async (e) => {
-                      await api.updateUserRole(token, u.user_id, e.target.value);
+                      const newRole = e.target.value;
+                      await api.updateUserRole(token, u.user_id, newRole, newRole === "EPR" ? u.company_id : null);
                       await load();
                     }}
                   >
@@ -108,6 +115,26 @@ export function AdminUsers() {
                     <option value="ADMIN">ADMIN</option>
                     <option value="EPR">EPR</option>
                   </select>
+                </td>
+                <td>
+                  {u.role === "EPR" ? (
+                    <select
+                      value={u.company_id || ""}
+                      onChange={async (e) => {
+                        await api.updateUserRole(token, u.user_id, "EPR", e.target.value);
+                        await load();
+                      }}
+                    >
+                      <option value="">— Select Company —</option>
+                      {companies.map((c) => (
+                        <option key={c.company_id} value={c.company_id}>
+                          {c.company_name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="muted">—</span>
+                  )}
                 </td>
                 <td>{u.status}</td>
                 <td className="row-form">
@@ -342,6 +369,8 @@ export function AdminCatalog() {
   const [productName, setProductName] = useState("");
   const [brandId, setBrandId] = useState("");
   const [materialId, setMaterialId] = useState("");
+  const [materialCode, setMaterialCode] = useState("");
+  const [materialName, setMaterialName] = useState("");
 
   async function load() {
     const [c, b, p, m] = await Promise.all([
@@ -365,6 +394,39 @@ export function AdminCatalog() {
 
   return (
     <AppShell title="Catalog" nav={nav}>
+      <form className="panel stack-form" onSubmit={async (e) => {
+        e.preventDefault();
+        await api.createMaterial(token, { material_code: materialCode, material_name: materialName });
+        setMaterialCode(""); setMaterialName("");
+        await load();
+      }}>
+        <h2>Add Material Type</h2>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          <input
+            placeholder="Code (e.g. PET, GLASS, ALUM)"
+            value={materialCode}
+            onChange={(e) => setMaterialCode(e.target.value.toUpperCase())}
+            style={{ flex: 1 }}
+            required
+          />
+          <input
+            placeholder="Name (e.g. PET Plastic Bottles)"
+            value={materialName}
+            onChange={(e) => setMaterialName(e.target.value)}
+            style={{ flex: 2 }}
+            required
+          />
+          <button className="btn" type="submit">Add</button>
+        </div>
+        <ul style={{ margin: "0.5rem 0 0", paddingLeft: "1.2rem" }}>
+          {materials.map((m) => (
+            <li key={m.material_id}>
+              <strong>{m.material_code}</strong> — {m.material_name}
+            </li>
+          ))}
+          {!materials.length && <li className="muted">No materials yet — add one above</li>}
+        </ul>
+      </form>
       <div className="grid-2">
         <form className="panel stack-form" onSubmit={async (e) => { e.preventDefault(); await api.createCompany(token, { company_name: companyName }); setCompanyName(""); await load(); }}>
           <h2>Company</h2>
@@ -431,7 +493,7 @@ export function AdminCollection() {
   }, [token]);
 
   return (
-    <AppShell title="Collection / EPR" nav={nav}>
+    <AppShell title="Collection & Batches" nav={nav}>
       <div className="grid-2">
         <form className="panel stack-form" onSubmit={async (e) => {
           e.preventDefault();
@@ -471,28 +533,32 @@ export function AdminCollection() {
                 <td>{b.recorded_weight_kg}</td><td>{b.status}</td>
               </tr>
             ))}
+            {!batches.length && (
+              <tr>
+                <td colSpan="4" className="muted text-center">No collection batches created yet</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
       <div className="table-wrap panel">
         <h2>Recyclers</h2>
-        <ul>{recyclers.map((r) => <li key={r.recycler_id}>{r.recycler_name}</li>)}</ul>
+        <ul>
+          {recyclers.map((r) => <li key={r.recycler_id}>{r.recycler_name}</li>)}
+          {!recyclers.length && <li className="muted">No recyclers registered yet</li>}
+        </ul>
       </div>
-      <div className="panel">
-        <h2>EPR reports</h2>
-        <button className="btn" type="button" onClick={async () => {
-          if (!companies[0]) return alert("Create a company first");
-          await api.createEprReport(token, {
-            company_id: companies[0].company_id,
-            period_start: "2026-01-01",
-            period_end: "2026-03-31",
-            total_transactions: batches.length,
-            total_recorded_weight_kg: batches.reduce((s, b) => s + Number(b.recorded_weight_kg), 0),
-            total_verified_weight_kg: 0,
-          });
-          await load();
-        }}>Generate draft report</button>
-        <ul>{reports.map((r) => <li key={r.report_id}>{r.company_name} · {r.period_start}→{r.period_end} · {r.status}</li>)}</ul>
+
+      <div className="panel" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h3 style={{ margin: 0 }}>EPR Compliance Reports & CSV Exports</h3>
+          <p className="muted" style={{ margin: "0.25rem 0 0" }}>
+            Generate official producer compliance reports, view material breakdowns, and download CSVs.
+          </p>
+        </div>
+        <Link to="/epr/reports" className="btn">
+          📊 Go to EPR Compliance Portal
+        </Link>
       </div>
     </AppShell>
   );

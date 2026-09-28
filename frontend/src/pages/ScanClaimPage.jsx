@@ -113,13 +113,29 @@ export default function ScanClaimPage() {
       <section className="panel">
         <h2>Dev fallback — paste QR JSON</h2>
         <form onSubmit={onManualSubmit}>
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem" }}>
+            <button
+              className="btn secondary"
+              type="button"
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setManual(text);
+                } catch {
+                  setErr("Clipboard access denied. Please paste manually into the box.");
+                }
+              }}
+            >
+              📋 Paste from Clipboard
+            </button>
+          </div>
           <textarea
-            rows={10}
+            rows={8}
             value={manual}
             onChange={(e) => setManual(e.target.value)}
             placeholder='Paste QR JSON from simulator…'
           />
-          <button className="btn" type="submit">
+          <button className="btn" type="submit" disabled={!manual.trim()}>
             Claim reward
           </button>
         </form>

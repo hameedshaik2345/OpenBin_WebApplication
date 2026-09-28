@@ -19,6 +19,7 @@ export default function UserDashboard() {
   const [transactions, setTransactions] = useState([]);
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("UPI");
+  const [destination, setDestination] = useState("");
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
 
@@ -44,7 +45,7 @@ export default function UserDashboard() {
       await api.withdraw(token, {
         amount: Number(amount),
         method,
-        destination_reference: "masked",
+        destination_reference: destination || "not-provided",
       });
       setMsg("Withdrawal completed");
       setAmount("");
@@ -112,6 +113,11 @@ export default function UserDashboard() {
                 <option value="BANK">Bank</option>
                 <option value="MANUAL">Manual</option>
               </select>
+              <input
+                placeholder={method === "UPI" ? "UPI ID (e.g. name@upi)" : "Account / Reference"}
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+              />
               <button className="btn" type="button" onClick={doWithdraw}>
                 Withdraw
               </button>

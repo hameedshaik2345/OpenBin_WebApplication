@@ -8,12 +8,15 @@ const { firebaseConfig } = require("./config/firebase");
 const { migrate } = require("./db/migrate");
 const { startExpiryWorker } = require("./workers/expiryWorker");
 
+const { helmetConfig, generalLimiter } = require("./middleware/security");
+
 const authRoutes = require("./routes/authRoutes");
 const rvmRoutes = require("./routes/rvmRoutes");
 const deviceRoutes = require("./routes/deviceRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
 const accountRoutes = require("./routes/accountRoutes");
 const catalogRoutes = require("./routes/catalogRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -24,6 +27,9 @@ const io = socketConfig.init(server, {
   origin: CLIENT_ORIGIN,
   credentials: true,
 });
+
+app.use(helmetConfig);
+app.use(generalLimiter);
 
 app.use(
   cors({
@@ -47,6 +53,7 @@ app.use("/api/rvm", deviceRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/accounts", accountRoutes);
 app.use("/api/catalog", catalogRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 async function start() {
   try {

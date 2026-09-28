@@ -359,12 +359,25 @@ export default function RvmSimulatorPage() {
           {err && <p className="error">{err}</p>}
 
           {qrPayload && (
-            <details>
-              <summary>QR JSON payload</summary>
-              <pre className="code-block">
-                {JSON.stringify(qrPayload, null, 2)}
-              </pre>
-            </details>
+            <div style={{ marginTop: "1rem" }}>
+              <button
+                type="button"
+                className="btn secondary"
+                style={{ marginBottom: "0.5rem" }}
+                onClick={() => {
+                  navigator.clipboard.writeText(JSON.stringify(qrPayload));
+                  alert("Copied QR payload to clipboard! Now open /dashboard/scan to claim.");
+                }}
+              >
+                📋 Copy QR Payload for Scan Page
+              </button>
+              <details open>
+                <summary style={{ cursor: "pointer", fontWeight: 600 }}>QR JSON payload</summary>
+                <pre className="code-block" style={{ maxHeight: "200px", overflow: "auto" }}>
+                  {JSON.stringify(qrPayload, null, 2)}
+                </pre>
+              </details>
+            </div>
           )}
         </section>
       </div>
