@@ -94,14 +94,25 @@ export default function UserDashboard() {
         chartInstanceRef.current.destroy();
       }
 
-      // Group claimed items by month or fallback
-      const monthlyData = {
-        May: 2,
-        Jun: 4,
-        Jul: 7,
-        Aug: 9,
-        Sep: Math.max(12, transactions.filter((t) => t.status === "CLAIMED").length),
-      };
+      // Group claimed items by month dynamically
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const now = new Date();
+      const pastMonths = [];
+      for (let i = 4; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        pastMonths.push(monthNames[d.getMonth()]);
+      }
+      const monthlyData = {};
+      pastMonths.forEach((m) => (monthlyData[m] = 0));
+      transactions
+        .filter((t) => (t.claim_status || t.status) === "CLAIMED")
+        .forEach((t) => {
+          const d = new Date(t.claimed_at || t.created_at);
+          const m = monthNames[d.getMonth()];
+          if (monthlyData[m] !== undefined) {
+            monthlyData[m]++;
+          }
+        });
 
       const ctx = chartCanvasRef.current.getContext("2d");
       chartInstanceRef.current = new Chart(ctx, {
@@ -277,13 +288,17 @@ export default function UserDashboard() {
     }
   }
 
-  // Calculated Stats
-  const totalBalance = Number(account?.balance || 214.5).toFixed(2);
-  const claimedTxs = transactions.filter((t) => t.status === "CLAIMED");
-  const itemsRecycledCount = claimedTxs.length || 12;
-  const weightKg = (
-    claimedTxs.reduce((sum, t) => sum + Number(t.weight_g || 70), 0) / 1000 || 0.86
-  ).toFixed(2);
+  // Calculated Stats from authoritative database transactions & account
+  const totalBalance = Number(account?.balance ?? 0).toFixed(2);
+  const claimedTxs = transactions.filter(
+    (t) => (t.claim_status || t.status) === "CLAIMED"
+  );
+  const itemsRecycledCount = claimedTxs.length;
+  const totalGrams = claimedTxs.reduce(
+    (sum, t) => sum + Number(t.estimated_weight_g || t.weight_g || 0),
+    0
+  );
+  const weightKg = (totalGrams / 1000).toFixed(2);
 
   // Tab Titles
   const tabTitles = {
@@ -297,10 +312,11 @@ export default function UserDashboard() {
 
   // Filtered transactions for History tab
   const filteredTxs = transactions.filter((t) => {
+    const status = t.claim_status || t.status || "";
     if (historyFilter === "All") return true;
-    if (historyFilter === "Claimed") return t.status === "CLAIMED";
-    if (historyFilter === "Pending") return t.status === "PENDING";
-    if (historyFilter === "Charity") return t.status === "CHARITY";
+    if (historyFilter === "Claimed") return status === "CLAIMED";
+    if (historyFilter === "Pending") return status === "UNCLAIMED" || status === "PENDING";
+    if (historyFilter === "Charity") return status === "EXPIRED" || status === "CHARITY";
     return true;
   });
 
@@ -680,39 +696,29 @@ export default function UserDashboard() {
                   </thead>
                   <tbody>
                     {ledger.length === 0 ? (
-                      <>
-                        <tr>
-                          <td>Bottle reward</td>
-                          <td style={{ color: "var(--ob-green-tx)", fontWeight: "800" }}>+₹4.20</td>
-                          <td>Today</td>
-                          <td><span className="ob-pill claimed">Claimed</span></td>
-                        </tr>
-                        <tr>
-                          <td>Can reward</td>
-                          <td style={{ color: "var(--ob-green-tx)", fontWeight: "800" }}>+₹3.50</td>
-                          <td>3 days ago</td>
-                          <td><span className="ob-pill claimed">Claimed</span></td>
-                        </tr>
-                        <tr>
-                          <td>Clean Campus Donation</td>
-                          <td style={{ color: "var(--ob-purple-tx)", fontWeight: "800" }}>-₹20.00</td>
-                          <td>1 week ago</td>
-                          <td><span className="ob-pill charity">To charity</span></td>
-                        </tr>
-                      </>
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: "center", padding: "28px 16px", color: "var(--ob-muted)", fontSize: "12.5px" }}>
+                          No wallet ledger entries recorded yet. Recycle at an RVM or claim OpenCoins to build your balance!
+                        </td>
+                      </tr>
                     ) : (
-                      ledger.map((item, idx) => (
-                        <tr key={item.ledger_id || idx}>
-                          <td>{item.description || item.entry_type}</td>
-                          <td style={{ fontWeight: "800", color: Number(item.amount) >= 0 ? "var(--ob-green-tx)" : "var(--ob-red-tx)" }}>
-                            {Number(item.amount) >= 0 ? `+₹${Number(item.amount).toFixed(2)}` : `-₹${Math.abs(Number(item.amount)).toFixed(2)}`}
-                          </td>
-                          <td>{new Date(item.created_at || Date.now()).toLocaleDateString()}</td>
-                          <td>
-                            <span className="ob-pill claimed">{item.entry_type || "Completed"}</span>
-                          </td>
-                        </tr>
-                      ))
+                      ledger.map((item, idx) => {
+                        const isCredit = item.direction === "CREDIT" || Number(item.amount) > 0;
+                        return (
+                          <tr key={item.account_transaction_id || item.ledger_id || idx}>
+                            <td>{item.description || item.source_type || "Reward settlement"}</td>
+                            <td style={{ fontWeight: "800", color: isCredit ? "var(--ob-green-tx)" : "var(--ob-red-tx)" }}>
+                              {isCredit ? `+₹${Number(item.amount).toFixed(2)}` : `-₹${Math.abs(Number(item.amount)).toFixed(2)}`}
+                            </td>
+                            <td>{new Date(item.created_at || Date.now()).toLocaleDateString()}</td>
+                            <td>
+                              <span className={`ob-pill ${isCredit ? "claimed" : "charity"}`}>
+                                {item.source_type || (isCredit ? "Credit" : "Debit")}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -748,48 +754,35 @@ export default function UserDashboard() {
                   </thead>
                   <tbody>
                     {filteredTxs.length === 0 ? (
-                      <>
-                        <tr>
-                          <td>Plastic bottle (PET)</td>
-                          <td>Main Block Gate</td>
-                          <td>2h ago</td>
-                          <td><span className="ob-pill claimed">Claimed</span></td>
-                        </tr>
-                        <tr>
-                          <td>Aluminium can</td>
-                          <td>Library Block</td>
-                          <td>Yesterday</td>
-                          <td><span className="ob-pill pending">Unclaimed</span></td>
-                        </tr>
-                        <tr>
-                          <td>Plastic bottle</td>
-                          <td>Hostel Hub</td>
-                          <td>5 days ago</td>
-                          <td><span className="ob-pill expired">Expired</span></td>
-                        </tr>
-                        <tr>
-                          <td>Aluminium can</td>
-                          <td>Campus Food Court</td>
-                          <td>6 days ago</td>
-                          <td><span className="ob-pill charity">To charity</span></td>
-                        </tr>
-                      </>
+                      <tr>
+                        <td colSpan={4} style={{ textAlign: "center", padding: "28px 16px", color: "var(--ob-muted)", fontSize: "12.5px" }}>
+                          No recycling transactions found in "{historyFilter}". Scan a QR code at any RVM to get started!
+                        </td>
+                      </tr>
                     ) : (
-                      filteredTxs.map((tx) => (
-                        <tr key={tx.transaction_id}>
-                          <td>
-                            <div style={{ fontWeight: "700" }}>{tx.object_type || "Beverage container"}</div>
-                            <div style={{ fontSize: "10.5px", color: "var(--ob-muted)" }}>{tx.material || "PET"} · {tx.weight_g || 50}g</div>
-                          </td>
-                          <td>{tx.location_name || tx.rvm_code || "Main Block"}</td>
-                          <td>{new Date(tx.created_at || Date.now()).toLocaleDateString()}</td>
-                          <td>
-                            <span className={`ob-pill ${tx.status?.toLowerCase() || "claimed"}`}>
-                              {tx.status || "Claimed"}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
+                      filteredTxs.map((tx) => {
+                        const claimState = tx.claim_status || tx.status || "CLAIMED";
+                        const isClaimed = claimState === "CLAIMED";
+                        const isExpired = claimState === "EXPIRED";
+                        const pillClass = isClaimed ? "claimed" : isExpired ? "expired" : "pending";
+                        return (
+                          <tr key={tx.transaction_id || tx.device_event_id}>
+                            <td>
+                              <div style={{ fontWeight: "700" }}>{tx.object_type || "Beverage Container"}</div>
+                              <div style={{ fontSize: "10.5px", color: "var(--ob-muted)" }}>
+                                {tx.material_code || tx.material_name || tx.material || "PET"} · {Number(tx.estimated_weight_g || tx.weight_g || 50).toFixed(0)}g
+                              </div>
+                            </td>
+                            <td>{tx.location_name || tx.rvm_code || "Main Block RVM"}</td>
+                            <td>{new Date(tx.created_at || Date.now()).toLocaleDateString()}</td>
+                            <td>
+                              <span className={`ob-pill ${pillClass}`}>
+                                {claimState}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -849,11 +842,11 @@ export default function UserDashboard() {
                         <td><strong>31</strong></td>
                       </tr>
                       <tr style={{ background: "var(--ob-lightblue-bg)" }}>
-                        <td style={{ color: "var(--ob-navy)", fontWeight: "800" }}>12</td>
+                        <td style={{ color: "var(--ob-navy)", fontWeight: "800" }}>#</td>
                         <td style={{ color: "var(--ob-navy)", fontWeight: "800" }}>
-                          {profile?.full_name || "You (Ananya S.)"}
+                          {profile?.full_name || user?.displayName || user?.email?.split("@")[0] || "You"}
                         </td>
-                        <td style={{ color: "var(--ob-navy)" }}>Main Block</td>
+                        <td style={{ color: "var(--ob-navy)" }}>Campus User</td>
                         <td style={{ color: "var(--ob-navy)", fontWeight: "800" }}>
                           {itemsRecycledCount}
                         </td>
@@ -921,11 +914,11 @@ export default function UserDashboard() {
                 <div className="ob-card-title">Community Contribution</div>
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid var(--ob-border)" }}>
                   <span style={{ fontSize: "12px", color: "var(--ob-muted2)" }}>Lifetime Rewards Earned</span>
-                  <b>₹{Number(account?.lifetime_earned || 218.7).toFixed(2)}</b>
+                  <b>₹{ledger.filter((l) => l.source_type === "RVM_REWARD" || l.direction === "CREDIT").reduce((s, l) => s + Number(l.amount || 0), 0).toFixed(2)}</b>
                 </div>
                 <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0" }}>
                   <span style={{ fontSize: "12px", color: "var(--ob-muted2)" }}>Donations to Campus Pool</span>
-                  <b>₹30.00</b>
+                  <b>₹{ledger.filter((l) => l.source_type === "USER_DONATION").reduce((s, l) => s + Number(l.amount || 0), 0).toFixed(2)}</b>
                 </div>
               </div>
             </div>
@@ -950,13 +943,13 @@ export default function UserDashboard() {
                     margin: "0 auto 12px",
                   }}
                 >
-                  {profile?.full_name?.slice(0, 2).toUpperCase() || "AS"}
+                  {profile?.full_name?.slice(0, 2).toUpperCase() || user?.email?.slice(0, 2).toUpperCase() || "OB"}
                 </div>
                 <div style={{ fontWeight: "800", fontSize: "16px" }}>
-                  {profile?.full_name || "Ananya Sharma"}
+                  {profile?.full_name || user?.displayName || user?.email?.split("@")[0] || "OpenBin Member"}
                 </div>
                 <div style={{ fontSize: "12px", color: "var(--ob-muted)", marginTop: "2px" }}>
-                  {profile?.email || user?.email || "+91 98765 43210"}
+                  {profile?.email || user?.email || "consumer@openbin.com"}
                 </div>
                 <span className="ob-pill active" style={{ marginTop: "10px" }}>
                   {profile?.role || "USER"} ACCOUNT
@@ -1005,73 +998,7 @@ export default function UserDashboard() {
         </div>
       </div>
 
-      {/* MOBILE BOTTOM NAVIGATION */}
-      <nav className="ob-bottom-nav">
-        <button
-          type="button"
-          className={`ob-bn-item ${activeTab === "dashboard" ? "active" : ""}`}
-          onClick={() => setActiveTab("dashboard")}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 10.5 12 3l9 7.5" />
-            <path d="M5 9v11h14V9" />
-          </svg>
-          Home
-        </button>
 
-        <button
-          type="button"
-          className={`ob-bn-item ${activeTab === "wallet" ? "active" : ""}`}
-          onClick={() => setActiveTab("wallet")}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-          </svg>
-          Wallet
-        </button>
-
-        <button
-          type="button"
-          className="ob-bn-scan tap"
-          onClick={() => openModal("scan")}
-          title="Scan RVM QR Code"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="3" height="3" rx="0.5" />
-            <rect x="18" y="14" width="3" height="3" rx="0.5" />
-            <rect x="14" y="18" width="3" height="3" rx="0.5" />
-            <rect x="18" y="18" width="3" height="3" rx="0.5" />
-          </svg>
-        </button>
-
-        <button
-          type="button"
-          className={`ob-bn-item ${activeTab === "history" ? "active" : ""}`}
-          onClick={() => setActiveTab("history")}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 3v18h18" />
-            <path d="M7 14l4-4 3 3 5-6" />
-          </svg>
-          History
-        </button>
-
-        <button
-          type="button"
-          className={`ob-bn-item ${activeTab === "profile" ? "active" : ""}`}
-          onClick={() => setActiveTab("profile")}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
-          </svg>
-          Profile
-        </button>
-      </nav>
 
       {/* OVERLAY MODALS & BOTTOM SHEETS */}
       <div

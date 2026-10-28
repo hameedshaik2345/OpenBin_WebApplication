@@ -31,11 +31,11 @@ export function AdminHome() {
         api.charity(token),
       ]);
       setStats({
-        users: users.users.length,
-        rvms: rvms.rvms.length,
-        txs: txs.transactions.length,
-        accounts: accounts.accounts.length,
-        charity: charity.account.balance,
+        users: users?.users?.length ?? 0,
+        rvms: rvms?.rvms?.length ?? 0,
+        txs: txs?.transactions?.length ?? 0,
+        accounts: accounts?.accounts?.length ?? 0,
+        charity: charity?.account?.balance ?? 0,
       });
     }
     if (token) load().catch(console.error);
@@ -859,13 +859,13 @@ export function AdminCatalog() {
       api.products(token),
       api.materials(token),
     ]);
-    setCompanies(c.companies);
-    setBrands(b.brands);
-    setProducts(p.products);
-    setMaterials(m.materials);
-    if (!companyId && c.companies[0]) setCompanyId(c.companies[0].company_id);
-    if (!brandId && b.brands[0]) setBrandId(b.brands[0].brand_id);
-    if (!materialId && m.materials[0]) setMaterialId(m.materials[0].material_id);
+    setCompanies(c?.companies || []);
+    setBrands(b?.brands || []);
+    setProducts(p?.products || []);
+    setMaterials(m?.materials || []);
+    if (!companyId && c?.companies?.[0]) setCompanyId(c.companies[0].company_id);
+    if (!brandId && b?.brands?.[0]) setBrandId(b.brands[0].brand_id);
+    if (!materialId && m?.materials?.[0]) setMaterialId(m.materials[0].material_id);
   }
 
   useEffect(() => {
