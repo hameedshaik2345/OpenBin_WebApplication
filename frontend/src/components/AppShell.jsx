@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../api";
 import openbinLogo from "../assets/openbin-logo.png";
 
 function getNavIcon(path) {
@@ -120,9 +121,32 @@ const sectionSubtitles = {
 };
 
 export default function AppShell({ title, nav, children }) {
-  const { profile, logout } = useAuth();
+  const { token, profile, logout } = useAuth();
   const location = useLocation();
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [openNotifs, setOpenNotifs] = useState(false);
+
+  async function loadNotifications() {
+    if (!token) return;
+    try {
+      const data = await api.notifications(token);
+      setNotifications(data.notifications || []);
+    } catch (_) {}
+  }
+
+  useEffect(() => {
+    loadNotifications();
+    const timer = setInterval(loadNotifications, 10000);
+    return () => clearInterval(timer);
+  }, [token]);
+
+  const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  async function handleMarkAll() {
+    await api.markAllNotificationsRead(token);
+    await loadNotifications();
+  }
 
   const sub = sectionSubtitles[title] || "Central Management Console & Operations";
 
@@ -312,6 +336,94 @@ export default function AppShell({ title, nav, children }) {
             </div>
           </div>
           <div className="ob-topbar-actions" style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            {/* Notifications Popover */}
+            <div style={{ position: "relative" }}>
+              <button
+                type="button"
+                className="ob-chip tap"
+                onClick={() => setOpenNotifs(!openNotifs)}
+                style={{ padding: "6px 10px", position: "relative" }}
+                title="Notifications"
+                aria-label="Notifications"
+              >
+                🔔
+                {unreadCount > 0 && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: "-4px",
+                      right: "-4px",
+                      background: "#EF4444",
+                      color: "#fff",
+                      borderRadius: "50%",
+                      padding: "1px 5px",
+                      fontSize: "10px",
+                      fontWeight: "800",
+                    }}
+                  >
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {openNotifs && (
+                <div
+                  className="panel"
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "calc(100% + 8px)",
+                    width: "300px",
+                    maxHeight: "360px",
+                    overflowY: "auto",
+                    zIndex: 1000,
+                    boxShadow: "0 14px 35px rgba(0, 0, 0, 0.22)",
+                    border: "1.5px solid #CBD5E1",
+                    borderRadius: "14px",
+                    padding: "14px",
+                    background: "#FFFFFF",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                    <strong style={{ fontSize: "13px", color: "#071F5C" }}>Notifications</strong>
+                    {unreadCount > 0 && (
+                      <button
+                        type="button"
+                        className="linkish"
+                        onClick={handleMarkAll}
+                        style={{ fontSize: "11px", color: "#0E3695", fontWeight: "750" }}
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+                  <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                    {notifications.map((n) => (
+                      <li
+                        key={n.notification_id}
+                        style={{
+                          padding: "8px 0",
+                          borderBottom: "1px solid #F1F5F9",
+                          opacity: n.is_read ? 0.6 : 1,
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, fontSize: "12px", color: "#0F172A" }}>{n.title}</div>
+                        <div style={{ fontSize: "11px", color: "#64748B", marginTop: "2px" }}>{n.message}</div>
+                        <div style={{ fontSize: "10px", color: "#94A3B8", marginTop: "3px" }}>
+                          {new Date(n.created_at).toLocaleTimeString()}
+                        </div>
+                      </li>
+                    ))}
+                    {!notifications.length && (
+                      <li style={{ padding: "16px 0", textAlign: "center", fontSize: "12px", color: "#94A3B8" }}>
+                        No notifications yet
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             <span className="ob-admin-status-badge">
               <span className="ob-status-dot" />
               <span className="ob-status-text">Admin Active</span>

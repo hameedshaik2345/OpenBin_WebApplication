@@ -62,14 +62,15 @@ async function updateStatus(req, res) {
 
 async function updateRole(req, res) {
   try {
-    const { role } = req.body;
+    const { role, company_id } = req.body;
     if (!["USER", "ADMIN", "EPR"].includes(role)) {
       return res.status(400).json({ error: "Invalid role" });
     }
     const user = await userService.updateUserRole(
       req.params.userId,
       role,
-      req.dbUser
+      req.dbUser,
+      company_id
     );
     return res.json({ user });
   } catch (err) {

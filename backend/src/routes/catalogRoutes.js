@@ -37,7 +37,9 @@ router.post(
 );
 
 router.get("/epr-reports", requireAuth, requireEpr, adminController.eprReports);
-router.post("/epr-reports", requireAuth, requireAdmin, adminController.createEprReport);
+router.get("/epr-reports/:reportId", requireAuth, requireEpr, adminController.getEprReport);
+router.get("/epr-reports/:reportId/export", requireAuth, requireEpr, adminController.exportEprReport);
+router.post("/epr-reports", requireAuth, requireEpr, adminController.createEprReport);
 
 router.get("/audit", requireAuth, requireAdmin, adminController.audit);
 

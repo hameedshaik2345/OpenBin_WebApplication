@@ -52,14 +52,14 @@ async function listCollectionBatches() {
 async function createRecycler(data) {
   const result = await pool.query(
     `INSERT INTO recyclers (recycler_name, registration_number, contact_email, contact_phone, address, status)
-     VALUES ($1,$2,$3,$4,$5,COALESCE($6,'ACTIVE')) RETURNING *`,
+     VALUES ($1,$2,$3,$4,$5,COALESCE($6::entity_status, 'ACTIVE'::entity_status)) RETURNING *`,
     [
       data.recycler_name,
       data.registration_number || null,
       data.contact_email || null,
       data.contact_phone || null,
       data.address || null,
-      data.status,
+      data.status || null,
     ]
   );
   return result.rows[0];
@@ -148,36 +148,161 @@ async function listReconciliations() {
 }
 
 async function createEprReport(data, actor) {
+  let totalTransactions = Number(data.total_transactions) || 0;
+  let totalRecordedWeightKg = Number(data.total_recorded_weight_kg) || 0;
+  let totalVerifiedWeightKg = Number(data.total_verified_weight_kg) || 0;
+
+  // If numbers were not manually provided, dynamically calculate them from transactions for the company and date period
+  if (!totalTransactions && !totalRecordedWeightKg) {
+    const aggResult = await pool.query(
+      `SELECT 
+        COUNT(t.transaction_id)::bigint AS count,
+        COALESCE(SUM(t.estimated_weight_g) / 1000.0, 0)::numeric(16,3) AS weight_kg
+       FROM transactions t
+       LEFT JOIN brands b ON t.brand_id = b.brand_id
+       LEFT JOIN products p ON t.product_id = p.product_id
+       LEFT JOIN brands pb ON p.brand_id = pb.brand_id
+       WHERE (b.company_id = $1 OR pb.company_id = $1 OR $1 IS NULL)
+         AND t.created_at >= $2::date
+         AND t.created_at < ($3::date + INTERVAL '1 day')`,
+      [data.company_id, data.period_start, data.period_end]
+    );
+
+    const agg = aggResult.rows[0];
+    totalTransactions = Number(agg?.count) || 0;
+    totalRecordedWeightKg = Number(agg?.weight_kg) || 0;
+
+    // Check for verified weights in recycler receipts
+    const verifiedResult = await pool.query(
+      `SELECT COALESCE(SUM(received_weight_kg), 0)::numeric(16,3) AS verified_kg
+       FROM recycler_receipts
+       WHERE verification_status = 'VERIFIED'
+         AND received_at >= $1::date
+         AND received_at < ($2::date + INTERVAL '1 day')`,
+      [data.period_start, data.period_end]
+    );
+    totalVerifiedWeightKg = Number(verifiedResult.rows[0]?.verified_kg) || 0;
+  }
+
   const result = await pool.query(
     `INSERT INTO epr_reports (
       company_id, period_start, period_end,
       total_transactions, total_recorded_weight_kg, total_verified_weight_kg,
       status, generated_by
-    ) VALUES ($1,$2,$3,$4,$5,$6,COALESCE($7,'DRAFT'),$8)
+    ) VALUES ($1,$2,$3,$4,$5,$6,COALESCE($7::report_status, 'DRAFT'::report_status),$8)
     RETURNING *`,
     [
       data.company_id,
       data.period_start,
       data.period_end,
-      data.total_transactions || 0,
-      data.total_recorded_weight_kg || 0,
-      data.total_verified_weight_kg || 0,
-      data.status,
+      totalTransactions,
+      totalRecordedWeightKg,
+      totalVerifiedWeightKg,
+      data.status || null,
       actor.user_id,
     ]
   );
-  return result.rows[0];
+
+  const report = result.rows[0];
+  await writeAudit({
+    actorUserId: actor.user_id,
+    actorType: actor.role,
+    action: "EPR_REPORT_CREATE",
+    entityType: "epr_reports",
+    entityId: report.report_id,
+    afterData: report,
+  });
+
+  return report;
 }
 
-async function listEprReports() {
+async function listEprReports(companyId = null) {
+  let query = `
+    SELECT er.*, c.company_name, u.full_name AS generated_by_name
+    FROM epr_reports er
+    JOIN companies c ON c.company_id = er.company_id
+    JOIN users u ON u.user_id = er.generated_by
+  `;
+  const params = [];
+  if (companyId) {
+    params.push(companyId);
+    query += ` WHERE er.company_id = $1`;
+  }
+  query += ` ORDER BY er.generated_at DESC`;
+  const result = await pool.query(query, params);
+  return result.rows;
+}
+
+async function getEprReport(reportId) {
   const result = await pool.query(
-    `SELECT er.*, c.company_name, u.full_name AS generated_by_name
+    `SELECT er.*, c.company_name, c.registration_number, u.full_name AS generated_by_name, u.email AS generated_by_email
      FROM epr_reports er
      JOIN companies c ON c.company_id = er.company_id
      JOIN users u ON u.user_id = er.generated_by
-     ORDER BY er.generated_at DESC`
+     WHERE er.report_id = $1`,
+    [reportId]
   );
-  return result.rows;
+  if (!result.rows[0]) return null;
+  const report = result.rows[0];
+
+  // Material breakdown
+  const breakdown = await pool.query(
+    `SELECT 
+       m.material_code,
+       m.material_name,
+       COUNT(t.transaction_id)::bigint AS count,
+       COALESCE(SUM(t.estimated_weight_g) / 1000.0, 0)::numeric(16,3) AS weight_kg,
+       COALESCE(SUM(t.reward_value), 0)::numeric(12,2) AS total_reward
+     FROM transactions t
+     JOIN materials m ON m.material_id = t.material_id
+     LEFT JOIN brands b ON t.brand_id = b.brand_id
+     LEFT JOIN products p ON t.product_id = p.product_id
+     LEFT JOIN brands pb ON p.brand_id = pb.brand_id
+     WHERE (b.company_id = $1 OR pb.company_id = $1 OR $1 IS NULL)
+       AND t.created_at >= $2::date
+       AND t.created_at < ($3::date + INTERVAL '1 day')
+     GROUP BY m.material_code, m.material_name
+     ORDER BY weight_kg DESC`,
+    [report.company_id, report.period_start, report.period_end]
+  );
+
+  return {
+    ...report,
+    breakdown: breakdown.rows,
+  };
+}
+
+async function exportEprReportCsv(reportId) {
+  const report = await getEprReport(reportId);
+  if (!report) throw Object.assign(new Error("Report not found"), { status: 404 });
+
+  const startDate = new Date(report.period_start).toISOString().split("T")[0];
+  const endDate = new Date(report.period_end).toISOString().split("T")[0];
+
+  const lines = [
+    `"OPENBIN EPR COMPLIANCE REPORT"`,
+    `"Report ID","${report.report_id}"`,
+    `"Company Name","${report.company_name.replace(/"/g, '""')}"`,
+    `"Registration Number","${report.registration_number || 'N/A'}"`,
+    `"Period","${startDate} to ${endDate}"`,
+    `"Status","${report.status}"`,
+    `"Total Recorded Weight (KG)",${report.total_recorded_weight_kg}`,
+    `"Total Verified Weight (KG)",${report.total_verified_weight_kg}`,
+    `"Total Transactions",${report.total_transactions}`,
+    `"Generated At","${new Date(report.generated_at).toISOString()}"`,
+    `"Generated By","${(report.generated_by_name || '').replace(/"/g, '""')}"`,
+    "",
+    `"MATERIAL BREAKDOWN"`,
+    `"Material Code","Material Name","Transactions Count","Weight (KG)","Total Rewards (INR)"`,
+  ];
+
+  for (const b of report.breakdown) {
+    lines.push(
+      `"${b.material_code}","${b.material_name.replace(/"/g, '""')}",${b.count},${b.weight_kg},${b.total_reward}`
+    );
+  }
+
+  return lines.join("\r\n");
 }
 
 module.exports = {
@@ -191,4 +316,6 @@ module.exports = {
   listReconciliations,
   createEprReport,
   listEprReports,
+  getEprReport,
+  exportEprReportCsv,
 };

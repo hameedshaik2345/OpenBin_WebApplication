@@ -347,6 +347,17 @@ async function claimTransaction({ transactionId, claimToken }, dbUser) {
       client,
     });
 
+    const { createNotification } = require("./notificationService");
+    await createNotification(
+      {
+        userId: dbUser.user_id,
+        title: "🎉 Reward Claimed!",
+        message: `Credited ₹${Number(tx.reward_value).toFixed(2)} to your wallet balance!`,
+        type: "REWARD",
+      },
+      client
+    );
+
     await client.query("COMMIT");
 
     const rvm = await rvmService.findById(tx.rvm_id);

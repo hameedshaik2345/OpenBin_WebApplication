@@ -14,7 +14,6 @@ async function upsertUser({ firebaseUid, email, fullName, phone = null }) {
   let role = existing?.role || "USER";
 
   if (
-    !existing &&
     BOOTSTRAP_ADMIN_EMAIL &&
     email.toLowerCase() === BOOTSTRAP_ADMIN_EMAIL
   ) {
@@ -106,9 +105,11 @@ async function listUsers({ q, role, status, limit = 100 } = {}) {
   params.push(Math.min(Number(limit) || 100, 500));
   const where = clauses.length ? `WHERE ${clauses.join(" AND ")}` : "";
   const result = await pool.query(
-    `SELECT user_id, firebase_uid, full_name, email, phone, role, status, created_at, updated_at
-     FROM users ${where}
-     ORDER BY created_at DESC
+    `SELECT u.user_id, u.firebase_uid, u.full_name, u.email, u.phone, u.role, u.status, u.company_id, c.company_name, u.created_at, u.updated_at
+     FROM users u
+     LEFT JOIN companies c ON c.company_id = u.company_id
+     ${where}
+     ORDER BY u.created_at DESC
      LIMIT $${params.length}`,
     params
   );
@@ -136,14 +137,22 @@ async function updateUserStatus(userId, status, actor) {
   return after;
 }
 
-async function updateUserRole(userId, role, actor) {
+async function updateUserRole(userId, role, actor, companyId = undefined) {
   const before = await findUserById(userId);
   if (!before) throw Object.assign(new Error("User not found"), { status: 404 });
 
-  const result = await pool.query(
-    `UPDATE users SET role = $1, updated_at = now() WHERE user_id = $2 RETURNING *`,
-    [role, userId]
-  );
+  let result;
+  if (companyId !== undefined) {
+    result = await pool.query(
+      `UPDATE users SET role = $1, company_id = $2, updated_at = now() WHERE user_id = $3 RETURNING *`,
+      [role, companyId || null, userId]
+    );
+  } else {
+    result = await pool.query(
+      `UPDATE users SET role = $1, updated_at = now() WHERE user_id = $2 RETURNING *`,
+      [role, userId]
+    );
+  }
   const after = result.rows[0];
   await writeAudit({
     actorUserId: actor.user_id,
@@ -151,8 +160,8 @@ async function updateUserRole(userId, role, actor) {
     action: "USER_ROLE_UPDATE",
     entityType: "users",
     entityId: userId,
-    beforeData: { role: before.role },
-    afterData: { role: after.role },
+    beforeData: { role: before.role, company_id: before.company_id },
+    afterData: { role: after.role, company_id: after.company_id },
   });
   return after;
 }
