@@ -77,4 +77,53 @@ async function updateRole(req, res) {
   }
 }
 
-module.exports = { syncUser, getMe, listUsers, updateStatus, updateRole };
+async function createUser(req, res) {
+  try {
+    const { email, password, fullName, role = "EPR" } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+    const { getAuth } = require("firebase-admin/auth");
+    const auth = getAuth();
+    let firebaseUser;
+    try {
+      firebaseUser = await auth.createUser({
+        email,
+        password,
+        displayName: fullName || email.split("@")[0],
+      });
+    } catch (fbErr) {
+      if (fbErr.code === "auth/email-already-exists") {
+        firebaseUser = await auth.getUserByEmail(email);
+        await auth.updateUser(firebaseUser.uid, { password });
+      } else {
+        throw fbErr;
+      }
+    }
+
+    const user = await userService.upsertUser({
+      firebaseUid: firebaseUser.uid,
+      email,
+      fullName: fullName || email.split("@")[0],
+    });
+
+    // Target role logic: EPR role can only create brand accounts (EPR)
+    // ADMIN can create EPR, USER, or ADMIN (defaults to EPR)
+    let targetRole = "EPR";
+    if (req.dbUser.role === "ADMIN" && role && ["USER", "ADMIN", "EPR"].includes(role)) {
+      targetRole = role;
+    }
+
+    if (targetRole) {
+      await userService.updateUserRole(user.user_id, targetRole, req.dbUser);
+      user.role = targetRole;
+    }
+
+    return res.status(201).json({ user });
+  } catch (err) {
+    console.error("createUser error:", err);
+    return res.status(err.status || 500).json({ error: err.message || "Failed to create user" });
+  }
+}
+
+module.exports = { syncUser, getMe, listUsers, updateStatus, updateRole, createUser };

@@ -53,7 +53,7 @@ export default function App() {
             path="/dashboard/scan"
             element={
               <ProtectedRoute roles={["USER", "ADMIN"]}>
-                <ScanClaimPage />
+                <UserDashboard />
               </ProtectedRoute>
             }
           />
@@ -83,15 +83,23 @@ export default function App() {
           <Route path="/admin/collection" element={<ProtectedRoute roles={["ADMIN"]}><AdminCollection /></ProtectedRoute>} />
           <Route path="/admin/audit" element={<ProtectedRoute roles={["ADMIN"]}><AdminAudit /></ProtectedRoute>} />
 
+          {/* Brand Portal / EPR Routes */}
           <Route path="/epr" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprHome /></ProtectedRoute>} />
           <Route path="/epr/rvms" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprRvms /></ProtectedRoute>} />
           <Route path="/epr/media" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprMedia /></ProtectedRoute>} />
           <Route path="/epr/reports" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprReports /></ProtectedRoute>} />
 
+          {/* Brand Portal Aliases */}
+          <Route path="/brand" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprHome /></ProtectedRoute>} />
+          <Route path="/brand-portal" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprHome /></ProtectedRoute>} />
+          <Route path="/brand/rvms" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprRvms /></ProtectedRoute>} />
+          <Route path="/brand/media" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprMedia /></ProtectedRoute>} />
+          <Route path="/brand/reports" element={<ProtectedRoute roles={["EPR", "ADMIN"]}><EprReports /></ProtectedRoute>} />
+
           <Route
             path="/rvm-simulator"
             element={
-              <ProtectedRoute roles={["ADMIN", "EPR"]}>
+              <ProtectedRoute roles={["ADMIN", "EPR", "USER"]}>
                 <RvmSimulatorPage />
               </ProtectedRoute>
             }

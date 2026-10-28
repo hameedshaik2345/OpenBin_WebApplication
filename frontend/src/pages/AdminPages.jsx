@@ -43,15 +43,171 @@ export function AdminHome() {
 
   return (
     <AppShell title="Admin dashboard" nav={nav}>
-      <div className="grid-4">
-        <div className="panel"><h3>Users</h3><p className="stat">{stats.users ?? "—"}</p></div>
-        <div className="panel"><h3>RVMs</h3><p className="stat">{stats.rvms ?? "—"}</p></div>
-        <div className="panel"><h3>Transactions</h3><p className="stat">{stats.txs ?? "—"}</p></div>
-        <div className="panel highlight"><h3>Charity</h3><p className="stat">₹{Number(stats.charity || 0).toFixed(2)}</p></div>
+      {/* KPI Cards Row */}
+      <div className="ob-kpi-row" style={{ marginBottom: "24px" }}>
+        {/* Users Card */}
+        <div className="ob-kpi-card">
+          <div className="ob-kpi-icon" style={{ background: "var(--ob-lightblue-bg, #E6F0FD)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0E3695" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+          </div>
+          <div className="ob-kpi-val">{stats.users ?? "—"}</div>
+          <div className="ob-kpi-label">Registered Accounts</div>
+          <div className="ob-kpi-delta up">Active Users & Brands</div>
+        </div>
+
+        {/* RVMs Card */}
+        <div className="ob-kpi-card">
+          <div className="ob-kpi-icon" style={{ background: "var(--ob-green-bg, #E1F5EE)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B4E3D" strokeWidth="2">
+              <rect x="2" y="2" width="20" height="8" rx="2" />
+              <rect x="2" y="14" width="20" height="8" rx="2" />
+              <line x1="6" y1="6" x2="6.01" y2="6" />
+              <line x1="6" y1="18" x2="6.01" y2="18" />
+            </svg>
+          </div>
+          <div className="ob-kpi-val">{stats.rvms ?? "—"}</div>
+          <div className="ob-kpi-label">Smart RVM Fleet</div>
+          <div className="ob-kpi-delta up">Connected & Online</div>
+        </div>
+
+        {/* Transactions Card */}
+        <div className="ob-kpi-card">
+          <div className="ob-kpi-icon" style={{ background: "#EEEDFE" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#26215C" strokeWidth="2">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+              <polyline points="17 6 23 6 23 12" />
+            </svg>
+          </div>
+          <div className="ob-kpi-val">{stats.txs ?? "—"}</div>
+          <div className="ob-kpi-label">Recorded Transactions</div>
+          <div className="ob-kpi-delta up">Recycling Deposits</div>
+        </div>
+
+        {/* Charity Card */}
+        <div className="ob-kpi-card">
+          <div className="ob-kpi-icon" style={{ background: "#FEF3C7" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2">
+              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+          </div>
+          <div className="ob-kpi-val">₹{Number(stats.charity || 0).toFixed(2)}</div>
+          <div className="ob-kpi-label">Charity Pool Balance</div>
+          <div className="ob-kpi-delta up">Community Sustainability</div>
+        </div>
       </div>
-      <p className="muted">
-        Open the <Link to="/rvm-simulator">RVM Simulator</Link> to run a full deposit → QR → claim flow.
-      </p>
+
+      {/* Simulator Hero Banner */}
+      <div
+        className="panel"
+        style={{
+          background: "linear-gradient(135deg, #071F5C 0%, #0E3695 100%)",
+          color: "#FFFFFF",
+          padding: "24px 28px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "16px",
+          border: "none",
+          boxShadow: "0 8px 24px rgba(7, 31, 92, 0.25)",
+          marginBottom: "24px",
+        }}
+      >
+        <div>
+          <span
+            style={{
+              display: "inline-block",
+              padding: "4px 10px",
+              borderRadius: "20px",
+              background: "rgba(255, 255, 255, 0.15)",
+              color: "#A7E4CD",
+              fontSize: "11px",
+              fontWeight: "800",
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: "8px",
+            }}
+          >
+            Hardware & Cloud Integration
+          </span>
+          <h2 style={{ color: "#FFFFFF", margin: "0 0 6px", fontSize: "1.35rem" }}>
+            Interactive RVM Deposit Simulator
+          </h2>
+          <p style={{ margin: 0, color: "rgba(255, 255, 255, 0.75)", fontSize: "13.5px", maxWidth: "600px" }}>
+            Test live telemetry, simulate physical can and bottle deposits, generate dynamic session QR codes, and trace consumer claim settlements in real time.
+          </p>
+        </div>
+        <Link
+          to="/rvm-simulator"
+          className="btn"
+          style={{
+            background: "#FFFFFF",
+            color: "#071F5C",
+            fontWeight: "800",
+            padding: "12px 22px",
+            fontSize: "13.5px",
+            boxShadow: "0 4px 14px rgba(0,0,0,0.2)",
+          }}
+        >
+          Launch Simulator ⚡
+        </Link>
+      </div>
+
+      {/* Operations Quick Shortcuts */}
+      <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#071F5C", margin: "28px 0 16px" }}>
+        Quick Administrative Modules
+      </h3>
+      <div className="grid-3">
+        <Link to="/admin/users" className="panel" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#E6F0FD", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0E3695" strokeWidth="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+              </svg>
+            </div>
+            <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "800", color: "#071F5C" }}>Users & Brand Accounts</h4>
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: "12.5px" }}>
+            Issue brand partner EPR accounts, view consumer signups, and manage role authorizations.
+          </p>
+        </Link>
+
+        <Link to="/admin/rvms" className="panel" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#E1F5EE", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B4E3D" strokeWidth="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" />
+                <rect x="2" y="14" width="20" height="8" rx="2" />
+              </svg>
+            </div>
+            <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "800", color: "#071F5C" }}>Smart RVM Hardware</h4>
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: "12.5px" }}>
+            Provision simulated or physical RVM units, assign campus locations, and monitor storage fullness.
+          </p>
+        </Link>
+
+        <Link to="/admin/pricing" className="panel" style={{ textDecoration: "none", display: "block" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#FEF3C7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#92400E" strokeWidth="2">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+            <h4 style={{ margin: 0, fontSize: "14px", fontWeight: "800", color: "#071F5C" }}>Scrap & Material Pricing</h4>
+          </div>
+          <p className="muted" style={{ margin: 0, fontSize: "12.5px" }}>
+            Update per-kilogram reimbursement rates for PET, Aluminium, and other recyclable streams.
+          </p>
+        </Link>
+      </div>
     </AppShell>
   );
 }
@@ -60,30 +216,215 @@ export function AdminUsers() {
   const { token } = useAuth();
   const [users, setUsers] = useState([]);
   const [q, setQ] = useState("");
+  const [roleFilter, setRoleFilter] = useState("ALL");
   const [err, setErr] = useState("");
+  const [notice, setNotice] = useState("");
+
+  // Create account form state
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [brandName, setBrandName] = useState("");
+  const [brandEmail, setBrandEmail] = useState("");
+  const [brandPassword, setBrandPassword] = useState("");
+  const [brandRole, setBrandRole] = useState("EPR");
+  const [creating, setCreating] = useState(false);
 
   async function load() {
     const data = await api.users(token, q);
-    setUsers(data.users);
+    setUsers(data.users || []);
   }
 
   useEffect(() => {
     if (token) load().catch((e) => setErr(e.message));
   }, [token]);
 
+  async function handleCreateAccount(e) {
+    e.preventDefault();
+    setErr("");
+    setNotice("");
+    setCreating(true);
+    try {
+      await api.createUser(token, {
+        fullName: brandName.trim(),
+        email: brandEmail.trim(),
+        password: brandPassword,
+        role: brandRole,
+      });
+      setNotice(`✓ Successfully created ${brandRole} account for "${brandName}" (${brandEmail})`);
+      setBrandName("");
+      setBrandEmail("");
+      setBrandPassword("");
+      setShowCreateForm(false);
+      await load();
+    } catch (e) {
+      setErr(e.message || "Failed to create account");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  const filteredUsers = users.filter((u) => {
+    if (roleFilter === "ALL") return true;
+    return u.role === roleFilter;
+  });
+
   return (
-    <AppShell title="Users" nav={nav}>
+    <AppShell title="Users & Access Control" nav={nav}>
       {err && <p className="error">{err}</p>}
-      <form
-        className="row-form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          load();
-        }}
-      >
-        <input placeholder="Search name/email" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button className="btn" type="submit">Search</button>
-      </form>
+      {notice && (
+        <div style={{ background: "var(--ob-green-bg, #E1F5EE)", color: "var(--ob-green-tx, #0B4E3D)", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", fontWeight: "700", marginBottom: "16px" }}>
+          {notice}
+        </div>
+      )}
+
+      {/* Create Account Panel */}
+      <div className="panel" style={{ marginBottom: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+          <div>
+            <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", margin: "0 0 4px" }}>
+              Create Brand Partner or Admin Account
+            </h2>
+            <p className="muted" style={{ margin: 0, fontSize: "13px", lineHeight: "1.5", color: "#64748B" }}>
+              Public registration is restricted to consumer accounts. Brand and Enterprise accounts must be issued here.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => setShowCreateForm(!showCreateForm)}
+            style={{ fontWeight: "700" }}
+          >
+            {showCreateForm ? "Close Form" : "+ Create Brand / Staff Account"}
+          </button>
+        </div>
+
+        {showCreateForm && (
+          <form onSubmit={handleCreateAccount} style={{ marginTop: "16px", paddingTop: "16px", borderTop: "1px solid #E5E7EB", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", alignItems: "flex-end" }}>
+            <div>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+                Brand / Full Name
+              </label>
+              <input
+                placeholder="e.g. CoolFizz Beverages"
+                value={brandName}
+                onChange={(e) => setBrandName(e.target.value)}
+                required
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+                Email Address
+              </label>
+              <input
+                type="email"
+                placeholder="e.g. partner@coolfizz.com"
+                value={brandEmail}
+                onChange={(e) => setBrandEmail(e.target.value)}
+                required
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="At least 6 characters"
+                value={brandPassword}
+                onChange={(e) => setBrandPassword(e.target.value)}
+                required
+                minLength={6}
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
+              />
+            </div>
+            <div>
+              <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+                Account Role
+              </label>
+              <select
+                value={brandRole}
+                onChange={(e) => setBrandRole(e.target.value)}
+                style={{ fontWeight: "700", background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
+              >
+                <option value="EPR">EPR (Brand Partner)</option>
+                <option value="ADMIN">ADMIN (System Administrator)</option>
+                <option value="USER">USER (Consumer)</option>
+              </select>
+            </div>
+            <div>
+              <button
+                type="submit"
+                className="btn"
+                disabled={creating}
+                style={{ width: "100%", padding: "10px 16px", fontWeight: "800" }}
+              >
+                {creating ? "Creating..." : "Issue Account"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {/* Search and Filters */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", marginBottom: "16px" }}>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            load();
+          }}
+          style={{ display: "flex", alignItems: "center", gap: "8px", margin: 0, flex: "1 1 320px", maxWidth: "440px" }}
+        >
+          <div style={{ position: "relative", width: "100%" }}>
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#64748B"
+              strokeWidth="2.2"
+              style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+            >
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              placeholder="Search users by name or email..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "9px 14px 9px 36px",
+                background: "#FFFFFF",
+                border: "1.5px solid #CBD5E1",
+                borderRadius: "10px",
+                color: "#0F172A",
+                fontSize: "13px",
+                fontWeight: "500",
+                boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+              }}
+            />
+          </div>
+          <button className="btn" type="submit" style={{ padding: "9px 18px", borderRadius: "10px", fontWeight: "700", whiteSpace: "nowrap" }}>
+            Search
+          </button>
+        </form>
+
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+          {["ALL", "EPR", "USER", "ADMIN"].map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={`btn ${roleFilter === r ? "" : "ghost"}`}
+              style={{ fontSize: "12px", padding: "6px 12px", fontWeight: "700" }}
+              onClick={() => setRoleFilter(r)}
+            >
+              {r === "ALL" ? "All Users" : r === "EPR" ? "Brand Partners (EPR)" : r === "USER" ? "Consumers (USER)" : "Admins (ADMIN)"}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="table-wrap panel">
         <table>
           <thead>
@@ -92,9 +433,16 @@ export function AdminUsers() {
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <tr key={u.user_id}>
-                <td>{u.full_name}</td>
+                <td>
+                  <strong>{u.full_name}</strong>
+                  {u.email === "openbinsolutions@gmail.com" && (
+                    <span style={{ marginLeft: "6px", background: "#FAEEDA", color: "#633806", padding: "2px 6px", borderRadius: "6px", fontSize: "10.5px", fontWeight: "800" }}>
+                      Primary Admin
+                    </span>
+                  )}
+                </td>
                 <td>{u.email}</td>
                 <td>
                   <select
@@ -103,13 +451,28 @@ export function AdminUsers() {
                       await api.updateUserRole(token, u.user_id, e.target.value);
                       await load();
                     }}
+                    style={{ fontWeight: "700" }}
                   >
                     <option value="USER">USER</option>
                     <option value="ADMIN">ADMIN</option>
                     <option value="EPR">EPR</option>
                   </select>
                 </td>
-                <td>{u.status}</td>
+                <td>
+                  <span
+                    style={{
+                      display: "inline-block",
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      background: u.status === "ACTIVE" ? "#E1F5EE" : u.status === "SUSPENDED" ? "#FEF3C7" : "#FEE2E2",
+                      color: u.status === "ACTIVE" ? "#0B4E3D" : u.status === "SUSPENDED" ? "#92400E" : "#991B1B",
+                    }}
+                  >
+                    {u.status}
+                  </span>
+                </td>
                 <td className="row-form">
                   <button className="btn ghost" type="button" onClick={async () => { await api.updateUserStatus(token, u.user_id, "BLOCKED"); await load(); }}>Block</button>
                   <button className="btn ghost" type="button" onClick={async () => { await api.updateUserStatus(token, u.user_id, "SUSPENDED"); await load(); }}>Suspend</button>
@@ -156,35 +519,102 @@ export function AdminRvms() {
 
   return (
     <AppShell title="RVMs" nav={nav}>
-      <form className="panel stack-form" onSubmit={create}>
-        <h2>Create simulated RVM</h2>
-        <input placeholder="RVM code (RVM-002)" value={form.rvm_code} onChange={(e) => setForm({ ...form, rvm_code: e.target.value })} required />
-        <input placeholder="Serial (SIM-RVM-002)" value={form.serial_number} onChange={(e) => setForm({ ...form, serial_number: e.target.value })} />
-        <input placeholder="Location" value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} />
-        <input type="number" placeholder="Total capacity" value={form.total_capacity} onChange={(e) => setForm({ ...form, total_capacity: Number(e.target.value) })} />
-        <button className="btn" type="submit">Create</button>
+      <form className="panel" onSubmit={create} style={{ marginBottom: "20px" }}>
+        <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", margin: "0 0 4px" }}>
+          Provision Smart RVM Unit
+        </h2>
+        <p className="muted" style={{ fontSize: "13px", lineHeight: "1.5", color: "#64748B", margin: "0 0 16px" }}>
+          Add a new smart reverse vending machine to your network fleet with simulated telemetry support.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", alignItems: "flex-end" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+              RVM Code
+            </label>
+            <input placeholder="e.g. RVM-002" value={form.rvm_code} onChange={(e) => setForm({ ...form, rvm_code: e.target.value })} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+              Serial Number
+            </label>
+            <input placeholder="Auto-generated if blank" value={form.serial_number} onChange={(e) => setForm({ ...form, serial_number: e.target.value })} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+              Location Name
+            </label>
+            <input placeholder="e.g. Central Library Campus" value={form.location_name} onChange={(e) => setForm({ ...form, location_name: e.target.value })} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+              Total Capacity (KG)
+            </label>
+            <input type="number" placeholder="100" value={form.total_capacity} onChange={(e) => setForm({ ...form, total_capacity: Number(e.target.value) })} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+          </div>
+          <div>
+            <button className="btn" type="submit" style={{ width: "100%", padding: "10px 16px" }}>
+              + Deploy Machine
+            </button>
+          </div>
+        </div>
       </form>
       <div className="table-wrap panel">
         <table>
           <thead>
             <tr>
-              <th>Code</th><th>Serial</th><th>Location</th><th>Status</th><th>Capacity</th><th>Sim</th>
+              <th>Code</th><th>Serial</th><th>Location</th><th>Status</th><th>Capacity</th><th>Type</th>
             </tr>
           </thead>
           <tbody>
-            {rvms.map((r) => (
-              <tr key={r.rvm_id}>
-                <td>{r.rvm_code}</td>
-                <td>{r.serial_number}</td>
-                <td>{r.location_name}</td>
-                <td>{r.status}</td>
-                <td>
-                  {Number(r.current_capacity).toFixed(2)} / {Number(r.total_capacity)} {r.capacity_unit}
-                  {" "}({Number(r.capacity_percent || 0)}%)
-                </td>
-                <td>{r.is_simulated ? "YES" : "NO"}</td>
-              </tr>
-            ))}
+            {rvms.map((r) => {
+              const pct = Number(r.capacity_percent || 0);
+              return (
+                <tr key={r.rvm_id}>
+                  <td><strong>{r.rvm_code}</strong></td>
+                  <td style={{ fontFamily: "monospace", fontSize: "12px" }}>{r.serial_number}</td>
+                  <td>{r.location_name || "—"}</td>
+                  <td>
+                    <span
+                      style={{
+                        display: "inline-block",
+                        padding: "2px 8px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        fontWeight: "700",
+                        background: r.status === "ONLINE" || r.status === "ACTIVE" ? "#E1F5EE" : "#FEF3C7",
+                        color: r.status === "ONLINE" || r.status === "ACTIVE" ? "#0B4E3D" : "#92400E",
+                      }}
+                    >
+                      {r.status}
+                    </span>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ width: "70px", height: "6px", background: "#E5E7EB", borderRadius: "3px", overflow: "hidden" }}>
+                        <div style={{ width: `${Math.min(pct, 100)}%`, height: "100%", background: pct > 85 ? "#EF4444" : pct > 60 ? "#F59E0B" : "#10B981", borderRadius: "3px" }} />
+                      </div>
+                      <span style={{ fontSize: "12px", fontWeight: "600" }}>
+                        {Number(r.current_capacity || 0).toFixed(1)} / {Number(r.total_capacity)} {r.capacity_unit} ({pct}%)
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: "6px",
+                        fontSize: "10.5px",
+                        fontWeight: "700",
+                        background: r.is_simulated ? "#FEF3C7" : "#E6F0FD",
+                        color: r.is_simulated ? "#92400E" : "#0E3695",
+                      }}
+                    >
+                      {r.is_simulated ? "SIMULATOR" : "HARDWARE"}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -222,30 +652,65 @@ export function AdminPricing() {
 
   return (
     <AppShell title="Material pricing" nav={nav}>
-      <form className="panel row-form" onSubmit={save}>
-        <select value={materialId} onChange={(e) => setMaterialId(e.target.value)}>
-          {materials.map((m) => (
-            <option key={m.material_id} value={m.material_id}>
-              {m.material_code} — {m.material_name}
-            </option>
-          ))}
-        </select>
-        <input type="number" step="0.01" placeholder="Price / KG (INR)" value={price} onChange={(e) => setPrice(e.target.value)} required />
-        <button className="btn" type="submit">Set current price</button>
+      <form className="panel" onSubmit={save} style={{ marginBottom: "20px" }}>
+        <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", margin: "0 0 4px" }}>
+          Update Scrap Rate
+        </h2>
+        <p className="muted" style={{ fontSize: "13px", lineHeight: "1.5", color: "#64748B", margin: "0 0 16px" }}>
+          Set effective reimbursement rates for recyclables. Historical transactions are frozen and won't be modified.
+        </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px", alignItems: "flex-end" }}>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+              Select Material
+            </label>
+            <select value={materialId} onChange={(e) => setMaterialId(e.target.value)} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}>
+              {materials.map((m) => (
+                <option key={m.material_id} value={m.material_id}>
+                  {m.material_code} — {m.material_name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{ display: "block", fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px" }}>
+              Price per KG (₹ INR)
+            </label>
+            <input type="number" step="0.01" placeholder="e.g. 15.00" value={price} onChange={(e) => setPrice(e.target.value)} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+          </div>
+          <div>
+            <button className="btn" type="submit" style={{ width: "100%", padding: "10px 16px" }}>
+              Set Current Price Rate
+            </button>
+          </div>
+        </div>
       </form>
-      <p className="muted">Historical transaction rewards are frozen at creation time and are not recalculated.</p>
       <div className="table-wrap panel">
         <table>
           <thead>
-            <tr><th>Material</th><th>₹ / kg</th><th>From</th><th>To</th></tr>
+            <tr><th>Material Code</th><th>Rate (₹ / kg)</th><th>Effective From</th><th>Effective Until</th><th>Status</th></tr>
           </thead>
           <tbody>
             {prices.map((p) => (
               <tr key={p.price_id}>
-                <td>{p.material_code}</td>
-                <td>{Number(p.price_per_kg).toFixed(2)}</td>
+                <td><strong>{p.material_code}</strong></td>
+                <td><span style={{ fontSize: "14px", fontWeight: "800", color: "#0B4E3D" }}>₹{Number(p.price_per_kg).toFixed(2)}</span></td>
                 <td>{new Date(p.effective_from).toLocaleString()}</td>
-                <td>{p.effective_to ? new Date(p.effective_to).toLocaleString() : "current"}</td>
+                <td>{p.effective_to ? new Date(p.effective_to).toLocaleString() : "Ongoing"}</td>
+                <td>
+                  <span
+                    style={{
+                      padding: "2px 8px",
+                      borderRadius: "6px",
+                      fontSize: "11px",
+                      fontWeight: "700",
+                      background: !p.effective_to ? "#E1F5EE" : "#F3F4F6",
+                      color: !p.effective_to ? "#0B4E3D" : "#6B7280",
+                    }}
+                  >
+                    {!p.effective_to ? "CURRENT" : "HISTORICAL"}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -267,21 +732,29 @@ export function AdminTransactions() {
         <table>
           <thead>
             <tr>
-              <th>Created</th><th>RVM</th><th>Material</th><th>Weight</th><th>Reward</th>
-              <th>Status</th><th>Claim</th><th>User</th>
+              <th>Timestamp</th><th>RVM Code</th><th>Material</th><th>Estimated Weight</th><th>Reward</th>
+              <th>Status</th><th>Claim State</th><th>Consumer Email</th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((t) => (
               <tr key={t.transaction_id}>
-                <td>{new Date(t.created_at).toLocaleString()}</td>
-                <td>{t.rvm_code}</td>
-                <td>{t.material_code}</td>
+                <td style={{ fontSize: "12px", color: "#4B5563" }}>{new Date(t.created_at).toLocaleString()}</td>
+                <td><strong>{t.rvm_code}</strong></td>
+                <td><span style={{ background: "#EEEDFE", color: "#26215C", padding: "2px 6px", borderRadius: "4px", fontSize: "11px", fontWeight: "700" }}>{t.material_code}</span></td>
                 <td>{t.estimated_weight_g}g</td>
-                <td>₹{Number(t.reward_value).toFixed(2)}</td>
-                <td>{t.transaction_status}</td>
-                <td>{t.claim_status}</td>
-                <td>{t.user_email || "—"}</td>
+                <td><strong style={{ color: "#0B4E3D" }}>₹{Number(t.reward_value).toFixed(2)}</strong></td>
+                <td>
+                  <span style={{ padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: "#E1F5EE", color: "#0B4E3D" }}>
+                    {t.transaction_status}
+                  </span>
+                </td>
+                <td>
+                  <span style={{ padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: t.claim_status === "CLAIMED" ? "#E1F5EE" : "#FEF3C7", color: t.claim_status === "CLAIMED" ? "#0B4E3D" : "#92400E" }}>
+                    {t.claim_status}
+                  </span>
+                </td>
+                <td style={{ fontSize: "12px" }}>{t.user_email || "Unclaimed (Anonymous)"}</td>
               </tr>
             ))}
           </tbody>
@@ -304,23 +777,59 @@ export function AdminAccounts() {
   }, [token]);
   return (
     <AppShell title="Accounts & charity" nav={nav}>
-      <div className="panel highlight">
-        <h2>CHARITY-001</h2>
-        <p className="stat">₹{Number(charity?.account?.balance || 0).toFixed(2)}</p>
+      <div
+        className="panel"
+        style={{
+          background: "linear-gradient(135deg, #E1F5EE 0%, #D0F0E4 100%)",
+          border: "1px solid #A7E4CD",
+          padding: "24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: "16px",
+          marginBottom: "20px",
+        }}
+      >
+        <div>
+          <span style={{ fontSize: "11px", fontWeight: "800", color: "#0B4E3D", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Community Impact Fund
+          </span>
+          <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "18px", fontWeight: "700", letterSpacing: "-0.01em", margin: "4px 0 0", color: "#0B4E3D" }}>Dedicated Charity Pool ({charity?.account?.account_code || "CHARITY-001"})</h2>
+          <p style={{ margin: "4px 0 0", color: "#064E3B", fontSize: "13px" }}>
+            Pooled donations contributed by consumers during deposit voucher claims.
+          </p>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ fontSize: "11px", fontWeight: "700", color: "#064E3B", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "4px" }}>
+            Total Pool Balance
+          </div>
+          <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "#0B4E3D", fontFamily: "'Manrope', -apple-system, sans-serif", letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+            ₹{Number(charity?.account?.balance || 0).toFixed(2)}
+          </div>
+        </div>
       </div>
       <div className="table-wrap panel">
         <table>
           <thead>
-            <tr><th>Code</th><th>Type</th><th>Owner</th><th>Balance</th><th>Status</th></tr>
+            <tr><th>Account Code</th><th>Account Type</th><th>Account Owner</th><th>Current Balance</th><th>Status</th></tr>
           </thead>
           <tbody>
             {accounts.map((a) => (
               <tr key={a.account_id}>
-                <td>{a.account_code}</td>
-                <td>{a.account_type}</td>
-                <td>{a.email || "—"}</td>
-                <td>₹{Number(a.balance).toFixed(2)}</td>
-                <td>{a.status}</td>
+                <td><strong>{a.account_code}</strong></td>
+                <td>
+                  <span style={{ padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: a.account_type === "CHARITY" ? "#FEF3C7" : a.account_type === "USER" ? "#E1F5EE" : "#EEEDFE", color: a.account_type === "CHARITY" ? "#92400E" : a.account_type === "USER" ? "#0B4E3D" : "#26215C" }}>
+                    {a.account_type}
+                  </span>
+                </td>
+                <td>{a.email || "System Escrow"}</td>
+                <td style={{ fontWeight: "700", color: "#071F5C", fontFamily: "'Manrope', sans-serif" }}>₹{Number(a.balance).toFixed(2)}</td>
+                <td>
+                  <span style={{ padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: "#E1F5EE", color: "#0B4E3D" }}>
+                    {a.status}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -365,33 +874,69 @@ export function AdminCatalog() {
 
   return (
     <AppShell title="Catalog" nav={nav}>
-      <div className="grid-2">
-        <form className="panel stack-form" onSubmit={async (e) => { e.preventDefault(); await api.createCompany(token, { company_name: companyName }); setCompanyName(""); await load(); }}>
-          <h2>Company</h2>
-          <input value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
-          <button className="btn" type="submit">Add</button>
-          <ul>{companies.map((c) => <li key={c.company_id}>{c.company_name}</li>)}</ul>
+      <div className="grid-3">
+        {/* Company Card */}
+        <form className="panel" onSubmit={async (e) => { e.preventDefault(); await api.createCompany(token, { company_name: companyName }); setCompanyName(""); await load(); }}>
+          <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "16px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", marginBottom: "4px" }}>Manufacturer Company</h2>
+          <p className="muted" style={{ fontSize: "12px", marginBottom: "14px" }}>Register parent FMCG manufacturing entity.</p>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+            <input placeholder="e.g. PepsiCo India Ltd" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+            <button className="btn" type="submit">+ Add</button>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {companies.map((c) => (
+              <span key={c.company_id} style={{ padding: "4px 10px", borderRadius: "8px", background: "#F3F4F6", fontSize: "12px", fontWeight: "700", color: "#374151" }}>
+                {c.company_name}
+              </span>
+            ))}
+          </div>
         </form>
-        <form className="panel stack-form" onSubmit={async (e) => { e.preventDefault(); await api.createBrand(token, { company_id: companyId, brand_name: brandName }); setBrandName(""); await load(); }}>
-          <h2>Brand</h2>
-          <select value={companyId} onChange={(e) => setCompanyId(e.target.value)}>
-            {companies.map((c) => <option key={c.company_id} value={c.company_id}>{c.company_name}</option>)}
-          </select>
-          <input value={brandName} onChange={(e) => setBrandName(e.target.value)} required />
-          <button className="btn" type="submit">Add</button>
-          <ul>{brands.map((b) => <li key={b.brand_id}>{b.brand_name}</li>)}</ul>
+
+        {/* Brand Card */}
+        <form className="panel" onSubmit={async (e) => { e.preventDefault(); await api.createBrand(token, { company_id: companyId, brand_name: brandName }); setBrandName(""); await load(); }}>
+          <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "16px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", marginBottom: "4px" }}>Partner Brand</h2>
+          <p className="muted" style={{ fontSize: "12px", marginBottom: "14px" }}>Link brand subsidiary to parent manufacturer.</p>
+          <div style={{ display: "grid", gap: "8px", marginBottom: "14px" }}>
+            <select value={companyId} onChange={(e) => setCompanyId(e.target.value)} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}>
+              {companies.map((c) => <option key={c.company_id} value={c.company_id}>{c.company_name}</option>)}
+            </select>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input placeholder="e.g. Aquafina" value={brandName} onChange={(e) => setBrandName(e.target.value)} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+              <button className="btn" type="submit">+ Add</button>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {brands.map((b) => (
+              <span key={b.brand_id} style={{ padding: "4px 10px", borderRadius: "8px", background: "#EEEDFE", fontSize: "12px", fontWeight: "700", color: "#26215C" }}>
+                {b.brand_name}
+              </span>
+            ))}
+          </div>
         </form>
-        <form className="panel stack-form" onSubmit={async (e) => { e.preventDefault(); await api.createProduct(token, { brand_id: brandId, material_id: materialId, product_name: productName }); setProductName(""); await load(); }}>
-          <h2>Product</h2>
-          <select value={brandId} onChange={(e) => setBrandId(e.target.value)}>
-            {brands.map((b) => <option key={b.brand_id} value={b.brand_id}>{b.brand_name}</option>)}
-          </select>
-          <select value={materialId} onChange={(e) => setMaterialId(e.target.value)}>
-            {materials.map((m) => <option key={m.material_id} value={m.material_id}>{m.material_code}</option>)}
-          </select>
-          <input value={productName} onChange={(e) => setProductName(e.target.value)} required />
-          <button className="btn" type="submit">Add</button>
-          <ul>{products.map((p) => <li key={p.product_id}>{p.product_name}</li>)}</ul>
+
+        {/* Product Card */}
+        <form className="panel" onSubmit={async (e) => { e.preventDefault(); await api.createProduct(token, { brand_id: brandId, material_id: materialId, product_name: productName }); setProductName(""); await load(); }}>
+          <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "16px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", marginBottom: "4px" }}>Product SKU</h2>
+          <p className="muted" style={{ fontSize: "12px", marginBottom: "14px" }}>Define barcode & recyclable material mapping.</p>
+          <div style={{ display: "grid", gap: "8px", marginBottom: "14px" }}>
+            <select value={brandId} onChange={(e) => setBrandId(e.target.value)} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}>
+              {brands.map((b) => <option key={b.brand_id} value={b.brand_id}>{b.brand_name}</option>)}
+            </select>
+            <select value={materialId} onChange={(e) => setMaterialId(e.target.value)} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}>
+              {materials.map((m) => <option key={m.material_id} value={m.material_id}>{m.material_code}</option>)}
+            </select>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <input placeholder="e.g. 500ml PET Bottle" value={productName} onChange={(e) => setProductName(e.target.value)} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+              <button className="btn" type="submit">+ Add</button>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+            {products.map((p) => (
+              <span key={p.product_id} style={{ padding: "4px 10px", borderRadius: "8px", background: "#E1F5EE", fontSize: "12px", fontWeight: "700", color: "#0B4E3D" }}>
+                {p.product_name}
+              </span>
+            ))}
+          </div>
         </form>
       </div>
     </AppShell>
@@ -433,7 +978,7 @@ export function AdminCollection() {
   return (
     <AppShell title="Collection / EPR" nav={nav}>
       <div className="grid-2">
-        <form className="panel stack-form" onSubmit={async (e) => {
+        <form className="panel" onSubmit={async (e) => {
           e.preventDefault();
           await api.createCollection(token, {
             ...batchForm,
@@ -441,58 +986,126 @@ export function AdminCollection() {
           });
           await load();
         }}>
-          <h2>Collection batch</h2>
-          <input placeholder="Batch code" value={batchForm.batch_code} onChange={(e) => setBatchForm({ ...batchForm, batch_code: e.target.value })} required />
-          <select value={batchForm.material_id} onChange={(e) => setBatchForm({ ...batchForm, material_id: e.target.value })}>
-            {materials.map((m) => <option key={m.material_id} value={m.material_id}>{m.material_code}</option>)}
-          </select>
-          <input type="number" step="0.001" placeholder="Weight kg" value={batchForm.recorded_weight_kg} onChange={(e) => setBatchForm({ ...batchForm, recorded_weight_kg: e.target.value })} required />
-          <button className="btn" type="submit">Create batch</button>
+          <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", marginBottom: "4px" }}>
+            Log Collection Batch
+          </h2>
+          <p className="muted" style={{ fontSize: "13px", lineHeight: "1.5", color: "#64748B", marginBottom: "16px" }}>
+            Record picked-up recyclable material volume from RVMs.
+          </p>
+          <div style={{ display: "grid", gap: "10px" }}>
+            <input placeholder="Batch code (e.g. BATCH-2026-04)" value={batchForm.batch_code} onChange={(e) => setBatchForm({ ...batchForm, batch_code: e.target.value })} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+            <select value={batchForm.material_id} onChange={(e) => setBatchForm({ ...batchForm, material_id: e.target.value })} style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}>
+              {materials.map((m) => <option key={m.material_id} value={m.material_id}>{m.material_code} — {m.material_name}</option>)}
+            </select>
+            <input type="number" step="0.001" placeholder="Recorded Weight in KG" value={batchForm.recorded_weight_kg} onChange={(e) => setBatchForm({ ...batchForm, recorded_weight_kg: e.target.value })} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+            <button className="btn" type="submit">+ Create Batch Record</button>
+          </div>
         </form>
-        <form className="panel stack-form" onSubmit={async (e) => {
+
+        <form className="panel" onSubmit={async (e) => {
           e.preventDefault();
           await api.createRecycler(token, { recycler_name: recyclerName });
           setRecyclerName("");
           await load();
         }}>
-          <h2>Recycler</h2>
-          <input value={recyclerName} onChange={(e) => setRecyclerName(e.target.value)} required />
-          <button className="btn" type="submit">Add recycler</button>
+          <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", marginBottom: "4px" }}>
+            Authorized Recycler
+          </h2>
+          <p className="muted" style={{ fontSize: "13px", lineHeight: "1.5", color: "#64748B", marginBottom: "16px" }}>
+            Onboard certified waste management recycling facilities.
+          </p>
+          <div style={{ display: "grid", gap: "10px" }}>
+            <input placeholder="Recycler organization name" value={recyclerName} onChange={(e) => setRecyclerName(e.target.value)} required style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }} />
+            <button className="btn" type="submit">+ Add Recycler Partner</button>
+          </div>
+          <div style={{ marginTop: "16px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "8px" }}>Active Recycling Partners:</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              {recyclers.map((r) => (
+                <span key={r.recycler_id} style={{ padding: "4px 10px", borderRadius: "8px", background: "#E1F5EE", fontSize: "12px", fontWeight: "700", color: "#0B4E3D" }}>
+                  {r.recycler_name}
+                </span>
+              ))}
+            </div>
+          </div>
         </form>
       </div>
+
       <div className="table-wrap panel">
-        <h2>Batches</h2>
+        <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", margin: "0 0 14px" }}>
+          Collection Batches
+        </h2>
         <table>
-          <thead><tr><th>Code</th><th>Material</th><th>Weight</th><th>Status</th></tr></thead>
+          <thead><tr><th>Batch Code</th><th>Material</th><th>Weight (KG)</th><th>Status</th></tr></thead>
           <tbody>
             {batches.map((b) => (
               <tr key={b.collection_batch_id}>
-                <td>{b.batch_code}</td><td>{b.material_code}</td>
-                <td>{b.recorded_weight_kg}</td><td>{b.status}</td>
+                <td><strong>{b.batch_code}</strong></td>
+                <td><span style={{ padding: "2px 6px", borderRadius: "4px", background: "#EEEDFE", color: "#26215C", fontSize: "11px", fontWeight: "700" }}>{b.material_code}</span></td>
+                <td><strong>{b.recorded_weight_kg} kg</strong></td>
+                <td>
+                  <span style={{ padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: "#E1F5EE", color: "#0B4E3D" }}>
+                    {b.status}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="table-wrap panel">
-        <h2>Recyclers</h2>
-        <ul>{recyclers.map((r) => <li key={r.recycler_id}>{r.recycler_name}</li>)}</ul>
-      </div>
+
       <div className="panel">
-        <h2>EPR reports</h2>
-        <button className="btn" type="button" onClick={async () => {
-          if (!companies[0]) return alert("Create a company first");
-          await api.createEprReport(token, {
-            company_id: companies[0].company_id,
-            period_start: "2026-01-01",
-            period_end: "2026-03-31",
-            total_transactions: batches.length,
-            total_recorded_weight_kg: batches.reduce((s, b) => s + Number(b.recorded_weight_kg), 0),
-            total_verified_weight_kg: 0,
-          });
-          await load();
-        }}>Generate draft report</button>
-        <ul>{reports.map((r) => <li key={r.report_id}>{r.company_name} · {r.period_start}→{r.period_end} · {r.status}</li>)}</ul>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", marginBottom: "14px" }}>
+          <div>
+            <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "17px", fontWeight: "700", letterSpacing: "-0.01em", color: "#071F5C", margin: 0 }}>
+              EPR Compliance Reports
+            </h2>
+            <p className="muted" style={{ margin: "4px 0 0", fontSize: "12.5px" }}>
+              Generate formal environmental reports for brand audit compliance.
+            </p>
+          </div>
+          <button className="btn" type="button" onClick={async () => {
+            if (!companies[0]) return alert("Create a company first");
+            await api.createEprReport(token, {
+              company_id: companies[0].company_id,
+              period_start: "2026-01-01",
+              period_end: "2026-03-31",
+              total_transactions: batches.length,
+              total_recorded_weight_kg: batches.reduce((s, b) => s + Number(b.recorded_weight_kg), 0),
+              total_verified_weight_kg: 0,
+            });
+            await load();
+          }}>
+            Generate Draft Report
+          </button>
+        </div>
+        <div style={{ display: "grid", gap: "8px" }}>
+          {reports.map((r) => (
+            <div
+              key={r.report_id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "10px 14px",
+                borderRadius: "10px",
+                background: "#F8FAFC",
+                border: "1px solid #E2E8F0",
+                fontSize: "13px",
+              }}
+            >
+              <div>
+                <strong>{r.company_name}</strong>
+                <span className="muted" style={{ marginLeft: "10px", fontSize: "12px" }}>
+                  {r.period_start} → {r.period_end}
+                </span>
+              </div>
+              <span style={{ padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: "#E1F5EE", color: "#0B4E3D" }}>
+                {r.status}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </AppShell>
   );
@@ -509,15 +1122,19 @@ export function AdminAudit() {
       <div className="table-wrap panel">
         <table>
           <thead>
-            <tr><th>When</th><th>Actor</th><th>Action</th><th>Entity</th></tr>
+            <tr><th>Timestamp</th><th>Actor Type</th><th>Action Performed</th><th>Entity Affected</th></tr>
           </thead>
           <tbody>
             {logs.map((l) => (
               <tr key={l.audit_id}>
-                <td>{new Date(l.created_at).toLocaleString()}</td>
-                <td>{l.actor_type}</td>
-                <td>{l.action}</td>
-                <td>{l.entity_type}</td>
+                <td style={{ fontSize: "12.5px", color: "#4B5563" }}>{new Date(l.created_at).toLocaleString()}</td>
+                <td>
+                  <span style={{ padding: "2px 8px", borderRadius: "6px", fontSize: "11px", fontWeight: "700", background: l.actor_type === "ADMIN" ? "#FAEEDA" : "#EEEDFE", color: l.actor_type === "ADMIN" ? "#633806" : "#26215C" }}>
+                    {l.actor_type}
+                  </span>
+                </td>
+                <td><strong>{l.action}</strong></td>
+                <td><span style={{ fontFamily: "monospace", fontSize: "12px" }}>{l.entity_type}</span></td>
               </tr>
             ))}
           </tbody>

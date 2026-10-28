@@ -1,5 +1,5 @@
 const express = require("express");
-const { requireFirebaseAuth, requireAuth, requireAdmin } = require("../middleware/auth");
+const { requireFirebaseAuth, requireAuth, requireAdmin, requireEpr } = require("../middleware/auth");
 const authController = require("../controllers/authController");
 
 const router = express.Router();
@@ -7,6 +7,7 @@ const router = express.Router();
 router.post("/sync", requireFirebaseAuth, authController.syncUser);
 router.get("/me", requireAuth, authController.getMe);
 router.get("/users", requireAuth, requireAdmin, authController.listUsers);
+router.post("/users", requireAuth, requireEpr, authController.createUser);
 router.patch(
   "/users/:userId/status",
   requireAuth,

@@ -32,6 +32,7 @@ export async function fetchMe(token) {
 
 export const api = {
   users: (token, q) => apiFetch(`/api/auth/users${q ? `?q=${encodeURIComponent(q)}` : ""}`, { token }),
+  createUser: (token, body) => apiFetch("/api/auth/users", { token, method: "POST", body }),
   updateUserStatus: (token, userId, status) =>
     apiFetch(`/api/auth/users/${userId}/status`, { token, method: "PATCH", body: { status } }),
   updateUserRole: (token, userId, role) =>

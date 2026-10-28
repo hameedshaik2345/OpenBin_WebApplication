@@ -21,13 +21,13 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
 const server = http.createServer(app);
 const io = socketConfig.init(server, {
-  origin: CLIENT_ORIGIN,
+  origin: (origin, callback) => callback(null, true),
   credentials: true,
 });
 
 app.use(
   cors({
-    origin: CLIENT_ORIGIN,
+    origin: (origin, callback) => callback(null, true),
     credentials: true,
   })
 );

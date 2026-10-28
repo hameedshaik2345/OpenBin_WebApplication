@@ -18,10 +18,13 @@ const STAGES = [
 
 const adminNav = [
   { to: "/admin", label: "Overview", end: true },
-  { to: "/admin/rvms", label: "RVMs" },
-  { to: "/admin/pricing", label: "Pricing" },
-  { to: "/admin/users", label: "Users" },
+  { to: "/admin/rvms", label: "RVM Fleet" },
+  { to: "/admin/pricing", label: "Material Pricing" },
+  { to: "/admin/users", label: "User Accounts" },
   { to: "/admin/transactions", label: "Transactions" },
+  { to: "/admin/orders", label: "EPR Invoices" },
+  { to: "/admin/accounts", label: "Brand Partners" },
+  { to: "/admin/analytics", label: "Analytics" },
   { to: "/rvm-simulator", label: "RVM Simulator" },
 ];
 
@@ -245,25 +248,35 @@ export default function RvmSimulatorPage() {
             {qrPayload && (
               <div className="sim-qr">
                 <p>Scan to claim reward</p>
-                <QRCodeSVG
-                  value={JSON.stringify(qrPayload)}
-                  size={180}
-                  bgColor="#0c1412"
-                  fgColor="#e8f0ec"
-                />
-                <p className="muted small">
-                  ₹{Number(qrPayload.transaction.reward_value).toFixed(2)} ·
-                  expires {new Date(qrPayload.transaction.expires_at).toLocaleTimeString()}
+                <div className="sim-qr-box">
+                  <QRCodeSVG
+                    value={JSON.stringify(qrPayload)}
+                    size={170}
+                    bgColor="#FFFFFF"
+                    fgColor="#071F5C"
+                  />
+                </div>
+                <p style={{ color: "#94A3B8", fontSize: "12px", marginTop: "4px" }}>
+                  ₹{Number(qrPayload.transaction.reward_value).toFixed(2)} · expires{" "}
+                  {new Date(qrPayload.transaction.expires_at).toLocaleTimeString()}
                 </p>
               </div>
             )}
           </div>
         </section>
 
-        <section className="panel sim-controls">
-          <h2>Deposit simulation</h2>
-          <label>
-            RVM
+        <section className="panel sim-controls" style={{ padding: "24px" }}>
+          <h2 style={{ fontFamily: "'Manrope', -apple-system, sans-serif", fontSize: "18px", fontWeight: "750", color: "#071F5C", margin: "0 0 4px" }}>
+            Deposit Simulation
+          </h2>
+          <p style={{ fontSize: "13px", color: "#64748B", margin: "0 0 18px", lineHeight: "1.5" }}>
+            Simulate dropping recyclable containers into the smart machine to test live telemetry and wallet claims.
+          </p>
+
+          <label style={{ marginBottom: "14px", display: "block" }}>
+            <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", marginBottom: "4px", display: "block" }}>
+              Target RVM
+            </span>
             <select
               value={selectedId}
               onChange={(e) => {
@@ -271,6 +284,7 @@ export default function RvmSimulatorPage() {
                 setQrPayload(null);
                 setStage("IDLE");
               }}
+              style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
             >
               {rvms.map((r) => (
                 <option key={r.rvm_id} value={r.rvm_id}>
@@ -282,17 +296,19 @@ export default function RvmSimulatorPage() {
 
           <form className="stack-form" onSubmit={runDeposit}>
             <label>
-              Object type
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>Object Type</span>
               <input
                 value={form.object_type}
                 onChange={(e) => updateField("object_type", e.target.value)}
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
               />
             </label>
             <label>
-              Material
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>Material</span>
               <select
                 value={form.material}
                 onChange={(e) => updateField("material", e.target.value)}
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
               >
                 {materials.map((m) => (
                   <option key={m.material_id} value={m.material_code}>
@@ -302,66 +318,95 @@ export default function RvmSimulatorPage() {
               </select>
             </label>
             <label>
-              Brand (optional)
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>Brand (optional)</span>
               <input
                 value={form.brand}
+                placeholder="e.g. Bisleri, Coca-Cola"
                 onChange={(e) => updateField("brand", e.target.value)}
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
               />
             </label>
             <label>
-              Product (optional)
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>Product (optional)</span>
               <input
                 value={form.product}
+                placeholder="e.g. 500ml Water Bottle"
                 onChange={(e) => updateField("product", e.target.value)}
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
               />
             </label>
             <label>
-              Weight (g)
+              <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>Weight (g)</span>
               <input
                 type="number"
                 min="1"
                 value={form.weight_g}
                 onChange={(e) => updateField("weight_g", e.target.value)}
                 required
+                style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
               />
             </label>
             <div className="grid-3">
               <label>
-                L (cm)
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>L (cm)</span>
                 <input
                   type="number"
                   value={form.length}
                   onChange={(e) => updateField("length", e.target.value)}
+                  style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
                 />
               </label>
               <label>
-                W (cm)
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>W (cm)</span>
                 <input
                   type="number"
                   value={form.width}
                   onChange={(e) => updateField("width", e.target.value)}
+                  style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
                 />
               </label>
               <label>
-                H (cm)
+                <span style={{ fontSize: "12px", fontWeight: "700", color: "#4B5563", display: "block" }}>H (cm)</span>
                 <input
                   type="number"
                   value={form.height}
                   onChange={(e) => updateField("height", e.target.value)}
+                  style={{ background: "#FFFFFF", border: "1.5px solid #CBD5E1", borderRadius: "10px", color: "#0F172A" }}
                 />
               </label>
             </div>
-            <button className="btn" type="submit" disabled={busy || !selected}>
-              {busy ? "Processing…" : "Deposit object"}
+            <button
+              className="btn"
+              type="submit"
+              disabled={busy || !selected}
+              style={{
+                background: busy ? "#94A3B8" : "linear-gradient(135deg, #071F5C 0%, #0E3695 100%)",
+                color: "#FFFFFF",
+                fontWeight: "750",
+                fontSize: "14px",
+                padding: "12px 20px",
+                borderRadius: "10px",
+                border: "none",
+                cursor: busy ? "not-allowed" : "pointer",
+                boxShadow: "0 4px 14px rgba(7, 31, 92, 0.25)",
+                width: "100%",
+                marginTop: "10px",
+              }}
+            >
+              {busy ? "Processing Telemetry…" : "⚡ Trigger Machine Deposit"}
             </button>
           </form>
 
-          {err && <p className="error">{err}</p>}
+          {err && (
+            <p className="error" style={{ marginTop: "14px", background: "#FEE2E2", color: "#991B1B", padding: "10px 14px", borderRadius: "10px", border: "1px solid #FCA5A5", fontSize: "13px", fontWeight: "600" }}>
+              {err}
+            </p>
+          )}
 
           {qrPayload && (
-            <details>
-              <summary>QR JSON payload</summary>
-              <pre className="code-block">
+            <details style={{ marginTop: "16px", background: "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "10px", padding: "10px 14px" }}>
+              <summary style={{ fontWeight: "700", fontSize: "12.5px", color: "#475569", cursor: "pointer" }}>QR JSON payload</summary>
+              <pre className="code-block" style={{ marginTop: "10px", background: "#0F172A", color: "#E2E8F0", padding: "12px", borderRadius: "8px", fontSize: "12px" }}>
                 {JSON.stringify(qrPayload, null, 2)}
               </pre>
             </details>
