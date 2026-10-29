@@ -1,6 +1,6 @@
 const transactionService = require("../services/transactionService");
 
-const INTERVAL_MS = Number(process.env.EXPIRY_WORKER_INTERVAL_MS || 60_000);
+const INTERVAL_MS = Number(process.env.EXPIRY_WORKER_INTERVAL_MS || 3000);
 
 function startExpiryWorker() {
   async function tick() {

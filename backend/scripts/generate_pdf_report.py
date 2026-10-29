@@ -230,8 +230,8 @@ def build_pdf(filename):
 
     story.append(Paragraph("D. Hardware Integration & RVM Simulator (/rvm-simulator)", h2_style))
     story.append(Paragraph("• <b>Complete IoT State Machine:</b> Replicates physical RVM sensor cycles (IDLE → CONTAINER_INSERTED → CLASSIFYING → SESSION_READY → DISPENSING).", bullet_style))
-    story.append(Paragraph("• <b>Dynamic QR Token Generation:</b> Live generation of high-contrast QR codes embedding UUID transaction tokens with configurable 15-minute expiration timers.", bullet_style))
-    story.append(Paragraph("• <b>Automated Expiry Worker:</b> Background cron worker running in Node.js that checks for expired unclaimed rewards every 60 seconds and transfers them to community charity.", bullet_style))
+    story.append(Paragraph("• <b>Dynamic QR Token Generation:</b> Live generation of high-contrast QR codes embedding UUID transaction tokens with configurable 15-second expiration timers.", bullet_style))
+    story.append(Paragraph("• <b>Automated Expiry Worker:</b> Background cron worker running in Node.js that checks for expired unclaimed rewards every 3 seconds and transfers them to community charity.", bullet_style))
     story.append(Paragraph("• <b>Restyled Emerald & Navy Theme:</b> Modernized bezel with high contrast, glowing status indicators, and clean Manrope typography matching OpenBin branding.", bullet_style))
     story.append(Spacer(1, 8))
 
@@ -267,7 +267,7 @@ def build_pdf(filename):
         [
             Paragraph("<b>Hardware / IoT</b>", table_cell_bold),
             Paragraph("<code>/rvm-simulator</code><br/><code>/api/rvm/transactions</code>", table_cell),
-            Paragraph("Sensor telemetry ingestion, dynamic QR code generation, 15-minute TTL enforcement, background expiry worker.", table_cell)
+            Paragraph("Sensor telemetry ingestion, dynamic QR code generation, 15-second TTL enforcement, background expiry worker.", table_cell)
         ]
     ]
 

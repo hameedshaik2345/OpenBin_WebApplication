@@ -5,7 +5,7 @@ const rvmService = require("./rvmService");
 const rtdbService = require("./rtdbService");
 const { writeAudit } = require("./auditService");
 
-const CLAIM_TTL_MS = Number(process.env.CLAIM_TTL_MS || 15 * 60 * 1000);
+const CLAIM_TTL_MS = Number(process.env.CLAIM_TTL_MS || 15 * 1000);
 
 function hashClaimToken(token) {
   // Architecture preserves hashed storage. Optional pepper via QR_TOKEN_SECRET later.
